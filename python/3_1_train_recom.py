@@ -5,8 +5,8 @@ import joblib
 import os
 
 # Fichier généré par 1_prepare.py
-DATA_DIR = "../data/"
-GENERATED_DIR = "../generated_files/pkl/"
+DATA_DIR = "data/"
+GENERATED_DIR = "generated_files/pkl/"
 INPUT_DB = DATA_DIR + "wines_db_full.csv"
 
 def train_knn():

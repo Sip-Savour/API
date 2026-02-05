@@ -2,7 +2,7 @@ import automl
 import os
 
 # Nom de base
-GENERATED_DIR = "../generated_files/automl/"
+GENERATED_DIR = "generated_files/automl/"
 DATASET_NAME = GENERATED_DIR + "wine_train" 
 
 

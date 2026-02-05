@@ -5,8 +5,8 @@ import os
 import joblib
 
 # ================= CONFIGURATION =================
-DATA_DIR = "../data/"
-GENERATED_DIR = "../generated_files/automl/"
+DATA_DIR = "data/"
+GENERATED_DIR = "generated_files/automl/"
 INPUT_CSV = DATA_DIR + "winemag-data_first150k.csv"
 OUTPUT_CSV = DATA_DIR + "wines_db_full.csv"
 BASENAME  = "wine_train"

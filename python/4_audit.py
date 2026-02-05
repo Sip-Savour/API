@@ -3,7 +3,7 @@ import json
 import os
 
 # CONFIGURATION
-DATA_DIR = "../data/"
+DATA_DIR = "data/"
 INPUT_DB = DATA_DIR+"wines_db_full.csv"
 JSON_FILE = DATA_DIR+"wine_colors.json"
 OUTPUT_FILE = DATA_DIR+"audit_cepages.csv"  # Le fichier de sortie demandé

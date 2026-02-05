@@ -9,8 +9,8 @@ from sklearn.neighbors import NearestNeighbors
 # =============================================================================
 # 1. CONFIGURATION : CHARGEMENT DU JSON DE COULEURS
 # =============================================================================
-DATA_DIR = "../data/"
-GENERATED_DIR = "../generated_files/pkl/"
+DATA_DIR = "data/"
+GENERATED_DIR = "generated_files/pkl/"
 JSON_FILE = DATA_DIR+"wine_colors.json"
 VARIETY_COLOR_MAP = {}
 
