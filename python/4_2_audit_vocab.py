@@ -6,8 +6,9 @@ from collections import Counter
 
 # ================= CONFIGURATION =================
 DATA_DIR = "data/"
+GENERATED_DIR = "generated_files/pkl/"
 INPUT_DB = DATA_DIR + "wines_db_full.csv"
-KEYWORDS_FILE = DATA_DIR + "keywords_list.pkl"  # Votre liste actuelle (générée par 1_prepare)
+KEYWORDS_FILE = GENERATED_DIR + "keywords_list.pkl"  # Votre liste actuelle (générée par 1_prepare)
 OUTPUT_FILE = DATA_DIR + "audit_vocabulary.csv"
 TOP_N_WORDS = 1500  # Combien de mots on analyse
 
