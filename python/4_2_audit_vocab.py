@@ -9,6 +9,7 @@ DATA_DIR = "data/"
 INPUT_DB = DATA_DIR + "wines_db_full.csv"
 KEYWORDS_FILE = DATA_DIR + "keywords_list.pkl"  # Votre liste actuelle (générée par 1_prepare)
 OUTPUT_FILE = DATA_DIR + "audit_vocabulary.csv"
+TOP_N_WORDS = 1500  # Combien de mots on analyse
 
 # Liste de mots à ignorer (Stop Words)
 # On enlève l'anglais basique ET le vocabulaire générique du vin qui n'apporte pas d'info sur le goût
@@ -62,13 +63,16 @@ def audit_vocabulary():
     
     # 4. Filtrage
     filtered_words = [w for w in words if w not in STOP_WORDS]
-
+    
+    # Comptage
+    counter = Counter(filtered_words)
+    most_common = counter.most_common(TOP_N_WORDS)
 
     # 5. Préparation de l'export
     data_export = []
     new_suggestions = 0
 
-    for word, freq in filtered_words:
+    for word, freq in most_common:
         # Statut : Est-ce que ce mot est déjà une colonne dans votre 1_prepare.py ?
         if word in current_keywords:
             status = "DÉJÀ UTILISÉ"
@@ -88,6 +92,7 @@ def audit_vocabulary():
 
     print("\n" + "="*50)
     print(f"✅ EXPORT TERMINÉ : '{OUTPUT_FILE}'")
+    print(f"   - Mots analysés : {TOP_N_WORDS}")
     print(f"   - Suggestions potentielles : {new_suggestions}")
     print("="*50)
     print("👉 Ouvrez ce fichier CSV.")
