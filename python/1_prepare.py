@@ -6,7 +6,8 @@ import joblib
 
 # ================= CONFIGURATION =================
 DATA_DIR = "data/"
-GENERATED_DIR = "generated_files/automl/"
+GENERATED_ML_DIR = "generated_files/automl/"
+GENERATED_PKL_DIR = "generated_files/pkl/"
 INPUT_CSV = DATA_DIR + "winemag-data_first150k.csv"
 OUTPUT_CSV = DATA_DIR + "wines_db_full.csv"
 BASENAME  = "wine_train"
@@ -80,7 +81,7 @@ def main():
     print(f"   > Matrice générée : {X_matrix.shape} (Vins x Mots-clés)")
     
     # Sauvegarde de la liste des colonnes pour pouvoir faire pareil lors du test
-    joblib.dump(KEYWORDS_COLUMNS, DATA_DIR + "keywords_list.pkl")
+    joblib.dump(KEYWORDS_COLUMNS, GENERATED_PKL_DIR + "keywords_list.pkl")
 
     # --- 3. SAUVEGARDE FORMAT S1 ---
     print(f"--- 3. Écriture des fichiers {GENERATED_DIR + BASENAME} ---")
