@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import re
 import os
 import joblib
 
@@ -12,91 +11,118 @@ INPUT_CSV = DATA_DIR + "winemag-data_first150k.csv"
 OUTPUT_CSV = DATA_DIR + "wines_db_full.csv"
 BASENAME  = "wine_train"
 
-KEYWORDS_COLUMNS = [
-    # --- VOS ANCIENS MOTS (Gardez-les) ---
-    "red", "white", "rose", "dry", "sweet",
-    "acid", "sugar", "fruit", "berry", "cherry",
-    "lemon", "apple", "pear", "citrus",
-    "oak", "wood", "vanilla", "butter", "cream",
-    "pepper", "spicy", "structure", "light",
-    "earth", "mineral", "honey", "chocolate", "tobacco", "smoke",
+# Correction variable
+GENERATED_DIR = GENERATED_ML_DIR
 
-    # Structure & Corps
-    "acidity", "tannins", "bodied", "smooth", "tannic", "dense",
-    "richness", "silky", "round", "heavy", "crisp", "firm",
+
+KEYWORD_GROUPS = {
+    # --- 1. COULEUR & FRUITS ---
+    "red_fruit":    ["red", "cherry", "raspberry", "strawberry", "cranberry", "pomegranate", "currant", "rhubarb", "watermelon", "sour cherry"],
+    "black_fruit":  ["black", "blackberry", "cassis", "plum", "dark fruit", "blueberry", "bramble", "boysenberry", "black cherry", "blackcurrant"],
+    "dried_fruit":  ["raisin", "prune", "fig", "date", "dried fruit", "cooked fruit", "candied", "jammy"],
+    "citrus":       ["citrus", "lemon", "lime", "grapefruit", "orange", "mandarin", "tangerine", "zest", "rind", "yuzu", "bergamot"],
+    "tropical":     ["tropical", "pineapple", "melon", "mango", "papaya", "passion", "lychee", "guava", "banana", "kiwi", "mangoes"],
+    "tree_fruit":   ["apple", "pear", "peach", "apricot", "nectarine", "quince", "yellow fruit"],
+    "gooseberry":   ["gooseberry"], 
+
+    # --- 2. SUCRE & STYLE ---
+    "dry":          ["dry", "bone dry"], 
+    "sweet":        ["sweet", "sugar", "honey", "lush", "syrup", "botrytis", "late harvest", "dessert", "off-dry", "maple"], # Ajout maple
     
-    # Style & Caractère
-    "ripe", "fresh", "soft", "dark", "green", "balanced",
-    "fruity", "clean", "elegant", "complex", "jammy", "lush",
-    "savory", "pure", "refined", "bright",
+    # --- 3. STRUCTURE ---
+    "acidity":      ["acid", "acidity", "tart", "crisp", "bright", "lively", "fresh", "freshness", "zesty", "sour", "racy", "zippy", "electric", "nervous"],
+    "tannins":      ["tannin", "tannins", "tannic", "firm", "chewy", "astringent", "grip", "structured", "muscular", "abrasive", "harsh", "gripping", "austere"], # Ajout austere
+    "body_full":    ["bodied", "full", "heavy", "dense", "thick", "rich", "richness", "concentrated", "big", "fat", "oily", "viscous", "lush", "opulent", "extract", "fuller"],
+    "body_light":   ["light", "elegant", "delicate", "thin", "airy", "lean", "watery", "dilute"],
+    "texture_soft": ["smooth", "soft", "silky", "velvety", "creamy", "round", "supple", "polished", "plush", "seamless"],
     
-    # Arômes de Fruits & Plantes
-    "blackberry", "raspberry", "peach", "plum", "currant",
-    "lime", "melon", "pineapple", "apricot", "orange",
-    "grapefruit", "strawberry", "cassis", "tropical",
-    "herbal", "herb", "floral", "mint", "grass",
+    # --- 4. BOISÉ, FUMÉ & ÉPICES (Le groupe corrigé) ---
+    "oak":          ["oak", "wood", "cedar", "barrel", "cask", "vanilla", "coconut", "woody", "sandalwood", "sawdust", "pine", "resin"], # Ajout pine, resin
+    "smoke_tobacco":["smoke", "smoky", "ash", "ashy", "charcoal", "tobacco", "cigar", "nicotine", "burnt", "charred", "roasted", "campfire", "incense", "soot"], # <-- LE GROUPE MANQUANT
+    "pastry":       ["brioche", "dough", "yeast", "biscuit", "bread", "toast", "toasty", "butter", "cream", "butterscotch", "caramel", "toffee", "marzipan", "nougat", "praline", "cookie", "graham", "marshmallow"], # Ajout marshmallow
+    "spices":       ["spice", "spicy", "pepper", "peppery", "cinnamon", "clove", "nutmeg", "licorice", "anise", "cardamom", "ginger", "allspice", "asian spice"],
+    "nutty":        ["nutty", "almond", "hazelnut", "walnut", "pecan", "chestnut", "oxidized", "sherry"],
+    "cocoa":        ["chocolate", "cocoa", "mocha", "coffee", "espresso", "dark chocolate", "milk chocolate"],
+
+    # --- 5. VÉGÉTAL & HERBACÉ ---
+    "herbal":       ["herb", "herbal", "green", "grass", "grassy", "leafy", "stem", "vegetal", "hay", "straw", "bramble", "fern", "weedy"],
+    "aromatic_herb":["mint", "eucalyptus", "menthol", "sage", "thyme", "fennel", "dill", "rosemary", "lavender", "bay leaf", "basil", "oregano"],
+    "vegetable":    ["bell pepper", "jalapeno", "capsicum", "olive", "green olive", "black olive", "tomato leaf", "asparagus", "green bean", "olives"],
+    "floral":       ["floral", "flower", "blossom", "rose", "violet", "jasmine", "honeysuckle", "acacia", "chamomile", "white flower", "potpourri", "flowery"],
     
-    # Arômes d'Élevage & Épices
-    "spice", "toast", "toasty", "cedar", "coffee",
-    "mocha", "cinnamon", "licorice", "cola", "cocoa",
-    "leather", "stone", "slate", "smoky"
-]
+    # --- 6. TERROIR, MINÉRAL & CHIMIQUE ---
+    "earth":        ["earth", "earthy", "dirt", "soil", "dusty", "loam", "mushroom", "truffle", "forest floor", "underbrush", "compost", "wet leaves", "soils"],
+    "mineral":      ["mineral", "minerality", "stone", "slate", "flint", "chalk", "chalky", "saline", "salty", "crushed rock", "limestone", "wet stone", "oyster shell", "granite", "stones", "sulfur", "gunpowder"], # Ajout sulfur, gunpowder
+    "inorganic":    ["graphite", "pencil", "lead", "petrol", "diesel", "gasoline", "rubber", "tar", "asphalt", "plastic", "vinyl", "kerosene", "tarry"],
+    "savory":       ["savory", "meaty", "bacon", "game", "leather", "animal", "cured meat", "sausage", "blood", "iron", "beef", "bouillon", "soy", "umami", "gamy"],
+    "funky":        ["barnyard", "sweaty", "horse", "brett", "band-aid", "yeasty", "cheese", "wax", "beeswax", "lanolin", "wet wool", "funk", "cheesy"],
+
+    # --- 7. QUALITÉ & AGE ---
+    "clean":        ["clean", "pure", "precise", "focused", "linear", "crystalline"],
+    "complex":      ["complex", "complexity", "layered", "nuanced", "depth", "multidimensional", "intricate"],
+    "age":          ["old", "aged", "mature", "developed", "tertiary", "evolved", "peak"],
+    "finish_long":  ["long finish", "length", "lingering", "persistent", "endless", "persistence"]
+}
 
 def main():
     print(f"--- 1. Chargement & Nettoyage ---")
+    
+    os.makedirs(GENERATED_PKL_DIR, exist_ok=True)
+    os.makedirs(GENERATED_ML_DIR, exist_ok=True)
+
     if not os.path.exists(INPUT_CSV):
         print(f"❌ Fichier {INPUT_CSV} manquant.")
         return
 
-    df = pd.read_csv(INPUT_CSV)
+    df = pd.read_csv(INPUT_CSV, on_bad_lines='skip', low_memory=False)
     
-    # Suppression des vides
+    # Création du titre si manquant (pour dataset 150k)
+    if 'title' not in df.columns:
+        df['winery'] = df['winery'].fillna("Inconnu")
+        df['variety'] = df['variety'].fillna("")
+        df['title'] = df['winery'].astype(str) + " " + df['variety'].astype(str)
+
     df = df.dropna(subset=['description', 'variety'])
-    
     print(f"   > Dataset de travail : {len(df)} vins.")
 
-    # --- 2. CRÉATION DES COLONNES (MANUAL ONE-HOT) ---
-    print("--- 2. Génération des colonnes 'Mots-clés' ---")
+    # --- 2. CRÉATION DES COLONNES GROUPÉES ---
+    print("--- 2. Génération des 'Meta-Features' (Groupement de synonymes) ---")
     
-    # On met tout en minuscule pour la recherche
     descriptions = df['description'].str.lower()
     
-    # Matrice qui va contenir nos 0 et 1
-    # On initialise tout à 0
-    X_matrix = np.zeros((len(df), len(KEYWORDS_COLUMNS)), dtype=int)
+    # On prépare les noms des colonnes finales (Les clés du dictionnaire)
+    final_columns = list(KEYWORD_GROUPS.keys())
     
-    # On remplit colonne par colonne
-    for i, word in enumerate(KEYWORDS_COLUMNS):
-        # On regarde si le mot est présent dans chaque description
-        # contains est plus rapide que apply
-        # astype(int) transforme True en 1 et False en 0
-        presence = descriptions.str.contains(word, regex=False).astype(int).values
+    # Matrice de résultat
+    X_matrix = np.zeros((len(df), len(final_columns)), dtype=int)
+    
+    for i, (col_name, synonyms) in enumerate(KEYWORD_GROUPS.items()):
+        # ASTUCE PERFORMANCE : Regex 'OR'
+        # On crée un pattern "mot1|mot2|mot3"
+        # On échappe les caractères spéciaux au cas où (re.escape)
+        pattern = '|'.join([f"\\b{word}\\b" for word in synonyms]) # \b = mot entier uniquement
+        
+        # Si un des synonymes est trouvé, ça met 1
+        presence = descriptions.str.contains(pattern, regex=True).astype(int).values
         X_matrix[:, i] = presence
         
-        # Petit log pour voir ce qui se passe
         count = np.sum(presence)
         if count > 0:
-            print(f"   - Colonne '{word}' : trouvée dans {count} vins")
+            print(f"   - Méta-colonne '{col_name}' : trouvée dans {count} vins (via {len(synonyms)} synonymes)")
 
-    print(f"   > Matrice générée : {X_matrix.shape} (Vins x Mots-clés)")
+    print(f"   > Matrice générée : {X_matrix.shape}")
     
-    # Sauvegarde de la liste des colonnes pour pouvoir faire pareil lors du test
-    joblib.dump(KEYWORDS_COLUMNS, GENERATED_PKL_DIR + "keywords_list.pkl")
+    # Sauvegarde de la liste des CLÉS (ce sont les seules colonnes que l'API verra désormais)
+    joblib.dump(final_columns, GENERATED_PKL_DIR + "keywords_list.pkl")
 
-    # --- 3. SAUVEGARDE FORMAT S1 ---
-    print(f"--- 3. Écriture des fichiers {GENERATED_ML_DIR + BASENAME} ---")
-    
-    # Fichier .data : Que des 0 et des 1 séparés par des espaces
-    # fmt='%d' veut dire "entier" (pas de virgule)
-    np.savetxt(f"{GENERATED_ML_DIR + BASENAME}.data", X_matrix, fmt='%d')
-    
-    # Fichier .solution : Les Labels
-    df['variety'].to_csv(f"{GENERATED_ML_DIR + BASENAME}.solution", index=False, header=False)
-    
-    # Sauvegarde DB complète pour l'app
+    # --- 3. SAUVEGARDE ---
+    print(f"--- 3. Écriture des fichiers ---")
+    np.savetxt(f"{GENERATED_DIR + BASENAME}.data", X_matrix, fmt='%d')
+    df['variety'].to_csv(f"{GENERATED_DIR + BASENAME}.solution", index=False, header=False)
     df.to_csv(OUTPUT_CSV, index=False)
 
-    print("✅ SUCCÈS ! Données binaires prêtes.")
+    print("✅ SUCCÈS ! Données regroupées et optimisées.")
+    print("👉 IMPORTANT : Relancez '2_train.py' et '3_train_recommender.py' car les colonnes ont changé !")
 
 if __name__ == "__main__":
     main()
