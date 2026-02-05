@@ -11,14 +11,35 @@ INPUT_CSV = DATA_DIR + "winemag-data_first150k.csv"
 OUTPUT_CSV = DATA_DIR + "wines_db_full.csv"
 BASENAME  = "wine_train"
 
+KEYWORDS_COLUMNS = [
+    # --- VOS ANCIENS MOTS (Gardez-les) ---
+    "red", "white", "rose", "dry", "sweet",
+    "acid", "sugar", "fruit", "berry", "cherry",
+    "lemon", "apple", "pear", "citrus",
+    "oak", "wood", "vanilla", "butter", "cream",
+    "pepper", "spicy", "structure", "light",
+    "earth", "mineral", "honey", "chocolate", "tobacco", "smoke",
 
-KEYWORDS_COLUMNS = sorted([
-    "tannin", "dry", "sweet", "acid", "crisp", "structure", 
-    "full-bodied", "light", "rich", "creamy", "butter", "fruit", "berry", 
-    "cherry", "citrus", "lemon", "apple", "pear", "oak", "wood", "vanilla", 
-    "spicy", "pepper", "mineral", "honey", "earth", "red", "white", "black",
-    "chocolate", "plum", "tobacco", "leather", "smoke"
-])
+    # Structure & Corps
+    "acidity", "tannins", "bodied", "smooth", "tannic", "dense",
+    "richness", "silky", "round", "heavy", "crisp", "firm",
+    
+    # Style & Caractère
+    "ripe", "fresh", "soft", "dark", "green", "balanced",
+    "fruity", "clean", "elegant", "complex", "jammy", "lush",
+    "savory", "pure", "refined", "bright",
+    
+    # Arômes de Fruits & Plantes
+    "blackberry", "raspberry", "peach", "plum", "currant",
+    "lime", "melon", "pineapple", "apricot", "orange",
+    "grapefruit", "strawberry", "cassis", "tropical",
+    "herbal", "herb", "floral", "mint", "grass",
+    
+    # Arômes d'Élevage & Épices
+    "spice", "toast", "toasty", "cedar", "coffee",
+    "mocha", "cinnamon", "licorice", "cola", "cocoa",
+    "leather", "stone", "slate", "smoky"
+]
 
 def main():
     print(f"--- 1. Chargement & Nettoyage ---")
