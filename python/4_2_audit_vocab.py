@@ -10,7 +10,7 @@ GENERATED_DIR = "generated_files/pkl/"
 INPUT_DB = DATA_DIR + "wines_db_full.csv"
 KEYWORDS_FILE = GENERATED_DIR + "keywords_list.pkl"  # Votre liste actuelle (générée par 1_prepare)
 OUTPUT_FILE = DATA_DIR + "audit_vocabulary.csv"
-TOP_N_WORDS = 1500  # Combien de mots on analyse
+TOP_N_WORDS = 5000  # Combien de mots on analyse
 
 # Liste de mots à ignorer (Stop Words)
 # On enlève l'anglais basique ET le vocabulaire générique du vin qui n'apporte pas d'info sur le goût
