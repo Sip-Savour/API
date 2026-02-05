@@ -4,9 +4,9 @@ from pathlib import Path
 
 # Répertoires par défaut (peuvent être surchargés via variables d'environnement ou config)
 BASE_DIR = Path.cwd()
-LOG_DIR = BASE_DIR + "/automl/logs"
-CHECKPOINT_DIR = BASE_DIR + "/automl/checkpoints"
-RESULTS_DIR = BASE_DIR + "/automl/results"
+LOG_DIR = BASE_DIR / "automl/logs"
+CHECKPOINT_DIR = BASE_DIR / "automl/checkpoints"
+RESULTS_DIR = BASE_DIR / "automl/results"
 
 # Création à l'import pour garantir leur existence avant toute opération I/O
 for d in [LOG_DIR, CHECKPOINT_DIR, RESULTS_DIR]:

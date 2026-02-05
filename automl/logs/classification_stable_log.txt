@@ -1,0 +1,61 @@
+[2026-02-05 17:57:31] Classification stable: 10 modèles, type=multi-classification
+[2026-02-05 17:57:31] Sous-échantillonnage (sans stratify): 30.0%
+[2026-02-05 17:58:51]  RidgeClassifier | meilleur score=0.0077 | params={}
+[2026-02-05 17:58:52]  RidgeClassifier | Score: 0.2533
+[2026-02-05 18:30:23]  SGDClassifier | meilleur score=0.0169 | params={}
+[2026-02-05 18:30:51]  SGDClassifier | Score: 0.1725
+[2026-02-05 20:51:52]  LinearSVC | meilleur score=0.0153 | params={}
+[2026-02-05 20:54:53]  LinearSVC | Score: 0.2690
+[2026-02-05 20:54:54]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:54:55]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:54:56]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:54:57]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:54:57]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:54:58]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:54:59]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:00]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:00]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:01]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:02]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:03]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:03]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:04]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:05]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:06]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:06]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:07]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:08]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:09]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:09]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:10]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:11]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:12]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:12]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:13]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:14]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:15]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:15]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:16]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:17]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:18]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:19]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:19]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:20]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:21]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:22]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:22]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:23]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:24]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:25]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:25]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:26]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:27]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:28]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:28]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:29]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:30]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:31]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:31]  Trial échoué pour MultinomialNB: Negative values in data passed to MultinomialNB (input X).
+[2026-02-05 20:55:31]  MultinomialNB: No trials are completed yet.
+[2026-02-05 20:56:32]  BernoulliNB | meilleur score=0.0215 | params={}
+[2026-02-05 20:56:34]  BernoulliNB | Score: 0.2711
