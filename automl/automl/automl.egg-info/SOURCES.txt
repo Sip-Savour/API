@@ -1,0 +1,8 @@
+README.md
+pyproject.toml
+automl.egg-info/PKG-INFO
+automl.egg-info/SOURCES.txt
+automl.egg-info/dependency_links.txt
+automl.egg-info/entry_points.txt
+automl.egg-info/requires.txt
+automl.egg-info/top_level.txt
