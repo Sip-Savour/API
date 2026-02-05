@@ -12,5 +12,5 @@
 
 # --- Exécution du script Python ---
 echo "=== Lancement AutoML ==="
-python ../python/1_prepare.py
+python python/1_prepare.py
 echo "=== Fin AutoML ==="
