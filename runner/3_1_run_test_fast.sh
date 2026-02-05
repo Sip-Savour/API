@@ -12,5 +12,5 @@
 
 # --- Exécution du script Python ---
 echo "=== Lancement AutoML ==="
-python python/5_fast.py
+python python/3_1_test_fast.py
 echo "=== Fin AutoML ==="

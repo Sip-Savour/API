@@ -8,18 +8,17 @@ from collections import Counter
 DATA_DIR = "data/"
 GENERATED_DIR = "generated_files/pkl/"
 INPUT_DB = DATA_DIR + "wines_db_full.csv"
-KEYWORDS_FILE = GENERATED_DIR + "keywords_list.pkl"  # Votre liste actuelle (générée par 1_prepare)
+KEYWORDS_FILE = GENERATED_DIR + "keywords_list.pkl"
 OUTPUT_FILE = DATA_DIR + "audit_vocabulary.csv"
-TOP_N_WORDS = 5000  # Combien de mots on analyse
 
-# Liste de mots à ignorer (Stop Words)
-# On enlève l'anglais basique ET le vocabulaire générique du vin qui n'apporte pas d'info sur le goût
+# J'augmente un peu le nombre de mots analysés au départ (ex: 2000)
+# pour être sûr d'en trouver assez de "nouveaux" une fois les anciens filtrés.
+TOP_N_WORDS = 2000 
+
 STOP_WORDS = set([
-    # Anglais basique
     "the", "and", "a", "of", "with", "is", "in", "it", "to", "that", "this", 
     "for", "on", "as", "are", "by", "an", "at", "be", "has", "from", "its",
     "but", "not", "or", "have", "some", "very", "more", "now", "up", "can",
-    # Mots génériques du vin (N'aident pas à différencier)
     "wine", "flavors", "notes", "palate", "finish", "nose", "aromas", "drink", 
     "years", "bottle", "glass", "show", "shows", "well", "good", "made", 
     "blend", "vineyard", "vintage", "character", "style", "bottling", "opens",
@@ -27,7 +26,7 @@ STOP_WORDS = set([
 ])
 
 def audit_vocabulary():
-    print(f"📚 Audit du vocabulaire des descriptions...")
+    print(f"📚 Audit du vocabulaire (Mots INCONNUS uniquement)...")
 
     # 1. Chargement des données
     if not os.path.exists(INPUT_DB):
@@ -35,70 +34,63 @@ def audit_vocabulary():
         return
 
     try:
-        df = pd.read_csv(INPUT_DB, usecols=['description'], on_bad_lines='skip', low_memory=False)
-    except:
-        print("⚠️ Erreur lecture CSV standard, tentative mode robuste...")
         df = pd.read_csv(INPUT_DB, on_bad_lines='skip', low_memory=False)
+    except:
+        print("⚠️ Erreur lecture CSV standard.")
+        return
 
-    print(f"   > Analyse de {len(df)} descriptions...")
-
-    # 2. Chargement des mots-clés actuels (ceux déjà dans votre système)
+    # 2. Chargement des mots-clés actuels (ceux à EXCLURE)
     current_keywords = set()
     if os.path.exists(KEYWORDS_FILE):
         try:
             current_keywords = set(joblib.load(KEYWORDS_FILE))
-            print(f"   > Vous utilisez actuellement {len(current_keywords)} mots-clés.")
+            print(f"   > Filtre actif : {len(current_keywords)} mots déjà connus seront ignorés.")
         except:
             print("   ⚠️ Impossible de lire la liste actuelle.")
     else:
-        print("   ⚠️ Aucune liste de mots-clés existante trouvée.")
+        print("   ⚠️ Aucune liste de mots-clés existante (tout sera considéré nouveau).")
 
-    # 3. Traitement du texte (Tokenization)
-    print("   > Comptage des mots (cela peut prendre quelques secondes)...")
-    
-    # On joint tout le texte pour aller plus vite
+    # 3. Traitement du texte
+    print("   > Tokenization et comptage...")
     text_blob = " ".join(df['description'].dropna().astype(str).tolist()).lower()
-    
-    # Regex : on ne garde que les mots de 3 lettres ou plus (a-z)
     words = re.findall(r'\b[a-z]{3,}\b', text_blob)
     
-    # 4. Filtrage
+    # 4. Filtrage des Stop Words
     filtered_words = [w for w in words if w not in STOP_WORDS]
     
     # Comptage
     counter = Counter(filtered_words)
     most_common = counter.most_common(TOP_N_WORDS)
 
-    # 5. Préparation de l'export
+    # 5. Préparation de l'export (FILTRAGE STRICT)
     data_export = []
-    new_suggestions = 0
-
+    
     for word, freq in most_common:
-        # Statut : Est-ce que ce mot est déjà une colonne dans votre 1_prepare.py ?
+        # --- MODIFICATION ICI ---
+        # Si le mot est déjà connu, on PASSE au suivant (on ne l'enregistre pas)
         if word in current_keywords:
-            status = "DÉJÀ UTILISÉ"
-        else:
-            status = "NOUVEAU (À AJOUTER ?)"
-            new_suggestions += 1
+            continue 
             
+        # Si on arrive ici, c'est forcément un nouveau mot
         data_export.append({
             "Mot": word,
             "Frequence": freq,
-            "Statut": status
+            "Statut": "NOUVEAU" # Plus besoin de préciser, ils sont tous nouveaux
         })
 
     # 6. Sauvegarde CSV
-    df_export = pd.DataFrame(data_export)
-    df_export.to_csv(OUTPUT_FILE, index=False, sep=";", encoding="utf-8-sig")
+    if data_export:
+        df_export = pd.DataFrame(data_export)
+        df_export.to_csv(OUTPUT_FILE, index=False, sep=";", encoding="utf-8-sig")
 
-    print("\n" + "="*50)
-    print(f"✅ EXPORT TERMINÉ : '{OUTPUT_FILE}'")
-    print(f"   - Mots analysés : {TOP_N_WORDS}")
-    print(f"   - Suggestions potentielles : {new_suggestions}")
-    print("="*50)
-    print("👉 Ouvrez ce fichier CSV.")
-    print("👉 Les mots marqués 'NOUVEAU' avec une haute fréquence sont les meilleurs candidats")
-    print("   pour enrichir votre liste 'KEYWORDS_COLUMNS' dans 1_prepare.py !")
+        print("\n" + "="*50)
+        print(f"✅ EXPORT TERMINÉ : '{OUTPUT_FILE}'")
+        print(f"   - Mots analysés (Top N) : {TOP_N_WORDS}")
+        print(f"   - Mots déjà connus (filtrés) : {len(most_common) - len(df_export)}")
+        print(f"   - Nouvelles suggestions : {len(df_export)}")
+        print("="*50)
+    else:
+        print("⚠️ Aucun nouveau mot trouvé dans le Top N !")
 
 if __name__ == "__main__":
     audit_vocabulary()
