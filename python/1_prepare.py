@@ -71,18 +71,23 @@ def main():
     os.makedirs(GENERATED_ML_DIR, exist_ok=True)
 
     if not os.path.exists(INPUT_CSV):
-        print(f"❌ Fichier {INPUT_CSV} manquant.")
+        print(f"❌ Fichier {INPUT_CSV} manquant. Vérifiez le dossier data/.")
         return
 
     df = pd.read_csv(INPUT_CSV, on_bad_lines='skip', low_memory=False)
     
     # Création du titre si manquant (pour dataset 150k)
     if 'title' not in df.columns:
+        print("   > Génération des titres (Winery + Variety)...")
         df['winery'] = df['winery'].fillna("Inconnu")
         df['variety'] = df['variety'].fillna("")
         df['title'] = df['winery'].astype(str) + " " + df['variety'].astype(str)
 
+    # Nettoyage
     df = df.dropna(subset=['description', 'variety'])
+    df['points'] = pd.to_numeric(df['points'], errors='coerce').fillna(0).astype(int)
+    df['price'] = pd.to_numeric(df['price'], errors='coerce').fillna(0.0)
+    
     print(f"   > Dataset de travail : {len(df)} vins.")
 
     # --- 2. CRÉATION DES COLONNES GROUPÉES ---
@@ -90,39 +95,44 @@ def main():
     
     descriptions = df['description'].str.lower()
     
-    # On prépare les noms des colonnes finales (Les clés du dictionnaire)
+    # On prépare les noms des colonnes finales
     final_columns = list(KEYWORD_GROUPS.keys())
     
     # Matrice de résultat
     X_matrix = np.zeros((len(df), len(final_columns)), dtype=int)
     
     for i, (col_name, synonyms) in enumerate(KEYWORD_GROUPS.items()):
-        # ASTUCE PERFORMANCE : Regex 'OR'
-        # On crée un pattern "mot1|mot2|mot3"
-        # On échappe les caractères spéciaux au cas où (re.escape)
-        pattern = '|'.join([f"\\b{word}\\b" for word in synonyms]) # \b = mot entier uniquement
+        # ASTUCE : Regex 'OR' (\b = mot entier uniquement)
+        # Exemple : "\bacid\b|\bacidity\b|\btart\b"
+        pattern = '|'.join([f"\\b{word}\\b" for word in synonyms])
         
-        # Si un des synonymes est trouvé, ça met 1
+        # Détection vectorisée
         presence = descriptions.str.contains(pattern, regex=True).astype(int).values
         X_matrix[:, i] = presence
         
         count = np.sum(presence)
         if count > 0:
-            print(f"   - Méta-colonne '{col_name}' : trouvée dans {count} vins (via {len(synonyms)} synonymes)")
+            print(f"   - Méta-colonne '{col_name}' : trouvée dans {count} vins")
 
     print(f"   > Matrice générée : {X_matrix.shape}")
     
-    # Sauvegarde de la liste des CLÉS (ce sont les seules colonnes que l'API verra désormais)
+    # ⚠️ SAUVEGARDE DES CLÉS (POUR L'AUTOML)
     joblib.dump(final_columns, GENERATED_PKL_DIR + "keywords_list.pkl")
 
+    # ⚠️ SAUVEGARDE DU DICTIONNAIRE COMPLET (POUR L'API) - TRES IMPORTANT
+    joblib.dump(KEYWORD_GROUPS, GENERATED_PKL_DIR + "keyword_groups.pkl")
+    print(f"   > Mappage complet sauvegardé : keyword_groups.pkl")
+
     # --- 3. SAUVEGARDE ---
-    print(f"--- 3. Écriture des fichiers ---")
+    print(f"--- 3. Écriture des fichiers finaux ---")
     np.savetxt(f"{GENERATED_DIR + BASENAME}.data", X_matrix, fmt='%d')
     df['variety'].to_csv(f"{GENERATED_DIR + BASENAME}.solution", index=False, header=False)
+    
+    # Sauvegarde du CSV propre pour le KNN
     df.to_csv(OUTPUT_CSV, index=False)
 
     print("✅ SUCCÈS ! Données regroupées et optimisées.")
-    print("👉 IMPORTANT : Relancez '2_train.py' et '3_train_recommender.py' car les colonnes ont changé !")
+    print("👉 IMPORTANT : Lancez maintenant '2_train.py' puis '3_train_recommender.py' !")
 
 if __name__ == "__main__":
     main()
