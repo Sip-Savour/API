@@ -12,12 +12,14 @@ print("⏳ Initialisation du système (Chargement en RAM)...")
 t_load_start = time.time()
 
 # Chemins des fichiers
-MODEL_CLASSIF = "results/best_model.pkl"  # <--- VOTRE MODÈLE AUTOML (SKLEARN DUMP)
-MODEL_KNN     = "model_knn.pkl"
-VECT_KNN      = "vectorizer_knn.pkl"
-KEYWORDS      = "keywords_list.pkl"
-METADATA      = "wines_metadata.pkl"
-COLORS        = "wine_colors.json"
+GENERATED_DIR = "../generated_files/pkl/"
+DATA_DIR      = "../data/"
+MODEL_CLASSIF = GENERATED_DIR + "../automl/results/best_model.pkl"  
+MODEL_KNN     = GENERATED_DIR + "model_knn.pkl"
+VECT_KNN      = GENERATED_DIR + "vectorizer_knn.pkl"
+KEYWORDS      = GENERATED_DIR + "keywords_list.pkl"
+METADATA      = GENERATED_DIR + "wines_metadata.pkl"
+COLORS        = DATA_DIR      + "wine_colors.json"
 
 # Chargement
 try:

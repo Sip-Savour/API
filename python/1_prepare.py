@@ -5,12 +5,13 @@ import os
 import joblib
 
 # ================= CONFIGURATION =================
-INPUT_CSV = "winemag-data_first150k.csv"
+DATA_DIR = "../data/"
+GENERATED_DIR = "../generated_files/automl/"
+INPUT_CSV = DATA_DIR + "winemag-data_first150k.csv"
+OUTPUT_CSV = DATA_DIR + "wines_db_full.csv"
 BASENAME  = "wine_train"
-SAMPLE_SIZE = 5000  # On peut en mettre plus car c'est très rapide à calculer
 
-# C'est ici qu'on définit vos "Colonnes"
-# Chaque mot deviendra une feature (0 ou 1)
+
 KEYWORDS_COLUMNS = sorted([
     "tannin", "dry", "sweet", "acid", "crisp", "structure", 
     "full-bodied", "light", "rich", "creamy", "butter", "fruit", "berry", 
@@ -29,14 +30,6 @@ def main():
     
     # Suppression des vides
     df = df.dropna(subset=['description', 'variety'])
-    
-    # Filtre Top 10 Cépages (pour simplifier la classification)
-   # top_10 = df['variety'].value_counts().nlargest(10).index
-   # df = df[df['variety'].isin(top_10)]
-    
-    # Sampling
-    #if SAMPLE_SIZE and len(df) > SAMPLE_SIZE:
-    #    df = df.sample(n=SAMPLE_SIZE, random_state=42)
     
     print(f"   > Dataset de travail : {len(df)} vins.")
 
@@ -66,20 +59,20 @@ def main():
     print(f"   > Matrice générée : {X_matrix.shape} (Vins x Mots-clés)")
     
     # Sauvegarde de la liste des colonnes pour pouvoir faire pareil lors du test
-    joblib.dump(KEYWORDS_COLUMNS, "keywords_list.pkl")
+    joblib.dump(KEYWORDS_COLUMNS, DATA_DIR + "keywords_list.pkl")
 
     # --- 3. SAUVEGARDE FORMAT S1 ---
-    print(f"--- 3. Écriture des fichiers {BASENAME} ---")
+    print(f"--- 3. Écriture des fichiers {GENERATED_DIR + BASENAME} ---")
     
     # Fichier .data : Que des 0 et des 1 séparés par des espaces
     # fmt='%d' veut dire "entier" (pas de virgule)
-    np.savetxt(f"{BASENAME}.data", X_matrix, fmt='%d')
+    np.savetxt(f"{GENERATED_DIR + BASENAME}.data", X_matrix, fmt='%d')
     
     # Fichier .solution : Les Labels
-    df['variety'].to_csv(f"{BASENAME}.solution", index=False, header=False)
+    df['variety'].to_csv(f"{GENERATED_DIR + BASENAME}.solution", index=False, header=False)
     
     # Sauvegarde DB complète pour l'app
-    df.to_csv("wines_db_full.csv", index=False)
+    df.to_csv(OUTPUT_CSV, index=False)
 
     print("✅ SUCCÈS ! Données binaires prêtes.")
 

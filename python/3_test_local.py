@@ -9,7 +9,9 @@ from sklearn.neighbors import NearestNeighbors
 # =============================================================================
 # 1. CONFIGURATION : CHARGEMENT DU JSON DE COULEURS
 # =============================================================================
-JSON_FILE = "wine_colors.json"
+DATA_DIR = "../data/"
+GENERATED_DIR = "../generated_files/pkl/"
+JSON_FILE = DATA_DIR+"wine_colors.json"
 VARIETY_COLOR_MAP = {}
 
 if os.path.exists(JSON_FILE):
@@ -34,10 +36,10 @@ def tester_prediction_avec_filtre(nom_test, mots_cles, couleur_imposee=None):
 
     # A. Chargement des outils
     try:
-        keywords = joblib.load("keywords_list.pkl")
-        knn = joblib.load("model_knn.pkl")
-        tfidf = joblib.load("vectorizer_knn.pkl")
-        df_meta = pd.read_pickle("wines_metadata.pkl")
+        keywords = joblib.load(GENERATED_DIR+"keywords_list.pkl")
+        knn = joblib.load(GENERATED_DIR+"model_knn.pkl")
+        tfidf = joblib.load(GENERATED_DIR+"vectorizer_knn.pkl")
+        df_meta = pd.read_pickle(GENERATED_DIR+"wines_metadata.pkl")
     except FileNotFoundError:
         print("❌ Fichiers modèles manquants. Lancez '1_prepare.py' et '3_train_recommender.py'.")
         return

@@ -18,7 +18,7 @@
 2216;Portuguese Red;red;OK
 2004;Sparkling Blend;white;OK
 1970;Shiraz;red;OK
-1682;Corvina, Rondinella, Molinara;NON DÉFINI;A FAIRE
+1682;Corvina," Rondinella"," Molinara;NON DÉFINI;A FAIRE"
 1505;Rhône-style Red Blend;red;OK
 1365;Pinot Gris;white;OK
 1365;Barbera;red;OK
@@ -310,12 +310,12 @@
 9;Grechetto;NON DÉFINI;A FAIRE
 8;Chenin Blanc-Viognier;NON DÉFINI;A FAIRE
 8;Malbec-Tannat;NON DÉFINI;A FAIRE
-8;Grenache Blend;NON DÉFINI;A FAIRE
-8;Assyrtiko;NON DÉFINI;A FAIRE
-8;Shiraz-Tempranillo;NON DÉFINI;A FAIRE
+8;Grenache Blend;NON DÉFINI;A FAIRE,,Here
+
+
 8;Savatiano;NON DÉFINI;A FAIRE
 8;Siria;NON DÉFINI;A FAIRE
-8;Susumaniello;NON DÉFINI;A FAIRE
+
 8;Picpoul;NON DÉFINI;A FAIRE
 8;Trepat;NON DÉFINI;A FAIRE
 8;Dornfelder;NON DÉFINI;A FAIRE
@@ -332,7 +332,7 @@
 7;Schiava;NON DÉFINI;A FAIRE
 7;Roter Traminer;NON DÉFINI;A FAIRE
 7;Blauer Portugieser;NON DÉFINI;A FAIRE
-7;Bastardo;NON DÉFINI;A FAIRE
+
 6;Elbling;NON DÉFINI;A FAIRE
 6;Seyval Blanc;NON DÉFINI;A FAIRE
 6;Shiraz-Malbec;NON DÉFINI;A FAIRE
@@ -349,7 +349,7 @@
 6;Kalecik Karasi;NON DÉFINI;A FAIRE
 6;Syrah-Tempranillo;NON DÉFINI;A FAIRE
 6;Airen;NON DÉFINI;A FAIRE
-6;Debit;NON DÉFINI;A FAIRE
+
 6;Mansois;NON DÉFINI;A FAIRE
 5;Lacrima;NON DÉFINI;A FAIRE
 5;Jaen;NON DÉFINI;A FAIRE
@@ -372,7 +372,7 @@
 5;Petroulianos;NON DÉFINI;A FAIRE
 5;Maturana;NON DÉFINI;A FAIRE
 5;Pinot Noir-Gamay;NON DÉFINI;A FAIRE
-5;Malbec-Bonarda;NON DÉFINI;A FAIRE
+
 5;Mantonico;NON DÉFINI;A FAIRE
 5;Tannat-Merlot;NON DÉFINI;A FAIRE
 5;Duras;NON DÉFINI;A FAIRE
@@ -393,7 +393,7 @@
 4;Okuzgozu;NON DÉFINI;A FAIRE
 4;Cabernet Sauvignon Grenache;NON DÉFINI;A FAIRE
 4;Greco Bianco;NON DÉFINI;A FAIRE
-4;Macabeo-Chardonnay;NON DÉFINI;A FAIRE
+
 4;Cabernet Sauvignon and Tinta Roriz;NON DÉFINI;A FAIRE
 4;Loin de l'Oeil;NON DÉFINI;A FAIRE
 4;Morio Muskat;NON DÉFINI;A FAIRE
@@ -414,7 +414,7 @@
 4;Pallagrello Bianco;NON DÉFINI;A FAIRE
 4;Nerello Cappuccio;NON DÉFINI;A FAIRE
 4;Muskateller;NON DÉFINI;A FAIRE
-4;Fer Servadou;NON DÉFINI;A FAIRE
+
 4;Pineau d'Aunis;NON DÉFINI;A FAIRE
 4;Siegerrebe;NON DÉFINI;A FAIRE
 3;Jacquère;NON DÉFINI;A FAIRE
@@ -468,7 +468,7 @@
 3;Manzoni;NON DÉFINI;A FAIRE
 2;Muscat of Alexandria;NON DÉFINI;A FAIRE
 2;Viognier-Grenache Blanc;NON DÉFINI;A FAIRE
-2;Bukettraube;NON DÉFINI;A FAIRE
+
 2;Grenache-Mourvèdre;NON DÉFINI;A FAIRE
 2;Saperavi-Merlot;NON DÉFINI;A FAIRE
 2;Garnacha Blend;NON DÉFINI;A FAIRE
@@ -492,7 +492,7 @@
 2;Malbec Blend;NON DÉFINI;A FAIRE
 2;Lambrusco di Sorbara;NON DÉFINI;A FAIRE
 2;Petite Syrah;NON DÉFINI;A FAIRE
-2;Pinot Blanc-Pinot Noir;NON DÉFINI;A FAIRE
+
 2;Kadarka;NON DÉFINI;A FAIRE
 2;Alvarelhão;NON DÉFINI;A FAIRE
 2;Grignolino;NON DÉFINI;A FAIRE
@@ -513,7 +513,7 @@
 2;Crespiello;NON DÉFINI;A FAIRE
 2;Pelaverga Piccolo;NON DÉFINI;A FAIRE
 2;Merlot-Grenache;NON DÉFINI;A FAIRE
-2;Cabernet Franc-Tempranillo;NON DÉFINI;A FAIRE
+
 2;Tinta Negra Mole;NON DÉFINI;A FAIRE
 2;Mtsvane;NON DÉFINI;A FAIRE
 2;Kallmet;NON DÉFINI;A FAIRE
@@ -531,7 +531,7 @@
 2;Roussanne-Grenache Blanc;NON DÉFINI;A FAIRE
 2;Doña Blanca;NON DÉFINI;A FAIRE
 2;Zelen;NON DÉFINI;A FAIRE
-2;Incrocio Manzoni;NON DÉFINI;A FAIRE
+
 2;Mazuelo;NON DÉFINI;A FAIRE
 2;Madeleine Angevine;NON DÉFINI;A FAIRE
 1;Cococciola;NON DÉFINI;A FAIRE
@@ -552,7 +552,7 @@
 1;Carineña;NON DÉFINI;A FAIRE
 1;Cabernet-Shiraz;NON DÉFINI;A FAIRE
 1;Grenache Gris;NON DÉFINI;A FAIRE
-1;Sarba;NON DÉFINI;A FAIRE
+
 1;Muscat Hamburg;NON DÉFINI;A FAIRE
 1;Sideritis;NON DÉFINI;A FAIRE
 1;Dafni;NON DÉFINI;A FAIRE

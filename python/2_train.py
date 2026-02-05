@@ -2,7 +2,10 @@ import automl
 import os
 
 # Nom de base
-DATASET_NAME = "wine_train" 
+GENERATED_DIR = "../generated_files/automl/"
+DATASET_NAME = GENERATED_DIR + "wine_train" 
+
+
 
 # CETTE PROTECTION EST OBLIGATOIRE POUR LE MULTIPROCESSING
 if __name__ == "__main__":

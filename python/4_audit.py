@@ -3,9 +3,10 @@ import json
 import os
 
 # CONFIGURATION
-INPUT_DB = "wines_db_full.csv"
-JSON_FILE = "wine_colors.json"
-OUTPUT_FILE = "audit_cepages.csv"  # Le fichier de sortie demandé
+DATA_DIR = "../data/"
+INPUT_DB = DATA_DIR+"wines_db_full.csv"
+JSON_FILE = DATA_DIR+"wine_colors.json"
+OUTPUT_FILE = DATA_DIR+"audit_cepages.csv"  # Le fichier de sortie demandé
 
 def audit_and_export():
     print(f"📊 Démarrage de l'audit des cépages...")

@@ -5,7 +5,9 @@ import joblib
 import os
 
 # Fichier généré par 1_prepare.py
-INPUT_DB = "wines_db_full.csv"
+DATA_DIR = "../data/"
+GENERATED_DIR = "../generated_files/pkl/"
+INPUT_DB = DATA_DIR + "wines_db_full.csv"
 
 def train_knn():
     print("⏳ Chargement de la base de vins pour le recommandeur...")
@@ -57,9 +59,9 @@ def train_knn():
     
     # 3. SAUVEGARDE
     print("💾 Sauvegarde des fichiers...")
-    joblib.dump(knn, "model_knn.pkl")
-    joblib.dump(tfidf, "vectorizer_knn.pkl")
-    df_meta.reset_index(drop=True).to_pickle("wines_metadata.pkl")
+    joblib.dump(knn, GENERATED_DIR+"model_knn.pkl")
+    joblib.dump(tfidf, GENERATED_DIR+"vectorizer_knn.pkl")
+    df_meta.reset_index(drop=True).to_pickle(GENERATED_DIR+"wines_metadata.pkl")
     
     print("✅ SUCCÈS ! Recommandeur prêt.")
     print("   - model_knn.pkl")
