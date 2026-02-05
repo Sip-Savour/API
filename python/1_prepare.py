@@ -84,14 +84,14 @@ def main():
     joblib.dump(KEYWORDS_COLUMNS, GENERATED_PKL_DIR + "keywords_list.pkl")
 
     # --- 3. SAUVEGARDE FORMAT S1 ---
-    print(f"--- 3. Écriture des fichiers {GENERATED_DIR + BASENAME} ---")
+    print(f"--- 3. Écriture des fichiers {GENERATED_ML_DIR + BASENAME} ---")
     
     # Fichier .data : Que des 0 et des 1 séparés par des espaces
     # fmt='%d' veut dire "entier" (pas de virgule)
-    np.savetxt(f"{GENERATED_DIR + BASENAME}.data", X_matrix, fmt='%d')
+    np.savetxt(f"{GENERATED_ML_DIR + BASENAME}.data", X_matrix, fmt='%d')
     
     # Fichier .solution : Les Labels
-    df['variety'].to_csv(f"{GENERATED_DIR + BASENAME}.solution", index=False, header=False)
+    df['variety'].to_csv(f"{GENERATED_ML_DIR + BASENAME}.solution", index=False, header=False)
     
     # Sauvegarde DB complète pour l'app
     df.to_csv(OUTPUT_CSV, index=False)
