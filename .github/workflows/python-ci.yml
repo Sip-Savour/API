@@ -1,0 +1,45 @@
+name: "Python CI - Sip&Savour"
+
+# Déclenchement sur toutes les branches et toutes les Pull Requests
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  test-python:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Récupère le code du dépôt
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Installe Python (version 3.10 par défaut, ajustable)
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip' # Active le cache pour accélérer les futurs runs
+
+      # 3. Installation des outils de test et dépendances
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest flake8 # flake8 pour le linting, pytest pour les tests
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      # 4. Vérification de la qualité du code (Linting)
+      # Cette étape échouera s'il y a des erreurs de syntaxe flagrantes
+      - name: Lint with flake8
+        run: |
+          # Arrête le build s'il y a des erreurs de syntaxe Python ou des symboles non définis
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      # 5. Exécution des tests unitaires
+      - name: Run Tests with Pytest
+        run: |
+          pytest
