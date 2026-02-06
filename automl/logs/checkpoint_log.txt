@@ -1,0 +1,1 @@
+[2026-02-06 01:30:30]  Checkpoint sauvegardé: /info/etu/m1/s2203089/API/automl/checkpoints/best_model_multi-classification_stable.pkl

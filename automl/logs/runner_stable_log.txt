@@ -1,1 +1,7 @@
 [2026-02-05 17:57:31] Tâche: multi-classification | Mode: stable
+<<<<<<< Updated upstream
+=======
+[2026-02-05 21:14:42] Tâche: multi-classification | Mode: stable
+[2026-02-06 01:30:30]  10 modèles testés
+[2026-02-06 01:30:30]  Meilleur: RandomForestClassifier (0.3095)
+>>>>>>> Stashed changes

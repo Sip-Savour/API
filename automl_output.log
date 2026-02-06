@@ -1,2 +1,7 @@
 === Lancement AutoML ===
+<<<<<<< Updated upstream
 --- Lancement de l'entraînement sur 'generated_files/automl/wine_train' ---
+=======
+automl/results/best_model.pkl
+=== Fin AutoML ===
+>>>>>>> Stashed changes
