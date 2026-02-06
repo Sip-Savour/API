@@ -1,6 +1,5 @@
 name: "Sip&Savour API CI"
 
-# Déclenche le workflow sur toutes les branches et toutes les Pull Requests
 on:
   push:
     branches:
@@ -14,44 +13,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Récupération du code source
+      # 1. Récupération du code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Configuration de l'environnement Python
+      # 2. Installation de Python 3.10 (Compatible avec votre pyproject.toml)
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          cache: 'pip' # Active le cache pour accélérer les installations futures
+          cache: 'pip'
 
       # 3. Installation des dépendances
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          
-          # Installation des outils de test et de qualité
+          # --- CORRECTIF CRITIQUE ---
+          # On met à jour pip et setuptools pour qu'ils sachent lire pyproject.toml
+          # C'est cette ligne qui corrige l'erreur "not a valid editable requirement"
+          python -m pip install --upgrade pip setuptools wheel
+
+          # Installation des outils de test
           pip install pytest flake8
-          
-          # Installation des dépendances du fichier requirements (nettoyé)
+
+          # Installation des dépendances listées dans requirements.txt
+          # (Assurez-vous d'avoir nettoyé ce fichier des drivers système comme vu précédemment)
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          
-          # INSTALLATION CRITIQUE : Votre bibliothèque locale 'automl'
-          # Le flag -e (editable) permet de lier le dossier au site-packages
+
+          # Double sécurité : Si le dossier automl existe mais n'était pas dans requirements.txt
+          # on force son installation en mode éditable.
           if [ -d "automl" ]; then pip install -e ./automl; fi
 
-      # 4. Analyse statique du code (Linting)
-      # Vérifie les erreurs de syntaxe graves avant de lancer les tests
+      # 4. Vérification Qualité (Linting)
       - name: Lint with Flake8
         run: |
-          # Arrête le build s'il y a des erreurs de syntaxe Python ou noms indéfinis
+          # Arrête le workflow s'il y a des erreurs de syntaxe Python graves
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Avertissements sur le style (ne bloque pas le build, informatif)
+          # Affiche des avertissements de style (mais ne bloque pas le workflow)
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      # 5. Exécution des Tests Unitaires
+      # 5. Lancement des Tests
       - name: Run Tests
         run: |
-          # Pytest découvrira automatiquement vos tests (fichiers commençant par test_*)
-          # Grâce à l'étape 3, il pourra faire "import automl" sans erreur
+          # Lance tous les tests trouvés dans le projet
           pytest
