@@ -1,7 +1,18 @@
 === Lancement AutoML ===
-<<<<<<< Updated upstream
---- Lancement de l'entraînement sur 'generated_files/automl/wine_train' ---
-=======
-automl/results/best_model.pkl
+⏳ Initialisation du système (Chargement en RAM)...
+   ✅ Modèle Classification (AutoML) chargé.
+   ✅ Moteur de Recommandation (KNN) chargé.
+   ✅ Métadonnées chargées (150930 vins).
+   ✅ Dictionnaire de synonymes chargé : 33 méta-catégories.
+🚀 Système prêt en 53.96 secondes.
+
+=== DÉBUT DES TESTS INTELLIGENTS (VERSION SYNONYMES) ===
+TEST                 | TEMPS    | CLASSIF (IA)              | RECO (KNN)
+--------------------------------------------------------------------------------------------------------------
+Poulet Classique     | 0.2319s  | Erreur Classif            | Gorge Pinot Grigio...
+Barbecue Expert      | 0.1764s  | Erreur Classif            | Vaeni Xinomavro...
+Bordeaux Style       | 0.1638s  | Erreur Classif            | Jekel Merlot...
+Dessert Noix         | 0.1740s  | Erreur Classif            | Argiolas Nasco...
+--------------------------------------------------------------------------------------------------------------
+⚡ Moyenne : 0.1865 s/req
 === Fin AutoML ===
->>>>>>> Stashed changes
