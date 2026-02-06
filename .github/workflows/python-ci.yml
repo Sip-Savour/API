@@ -17,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Installation de Python 3.10 (Compatible avec votre pyproject.toml)
+      # 2. Installation de Python 3.10 
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
@@ -27,28 +27,18 @@ jobs:
       # 3. Installation des dépendances
       - name: Install dependencies
         run: |
-          # --- CORRECTIF CRITIQUE ---
-          # On met à jour pip et setuptools pour qu'ils sachent lire pyproject.toml
-          # C'est cette ligne qui corrige l'erreur "not a valid editable requirement"
           python -m pip install --upgrade pip setuptools wheel
 
-          # Installation des outils de test
           pip install pytest flake8
 
-          # Installation des dépendances listées dans requirements.txt
-          # (Assurez-vous d'avoir nettoyé ce fichier des drivers système comme vu précédemment)
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-          # Double sécurité : Si le dossier automl existe mais n'était pas dans requirements.txt
-          # on force son installation en mode éditable.
           if [ -d "automl" ]; then pip install -e ./automl; fi
 
       # 4. Vérification Qualité (Linting)
       - name: Lint with Flake8
         run: |
-          # Arrête le workflow s'il y a des erreurs de syntaxe Python graves
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Affiche des avertissements de style (mais ne bloque pas le workflow)
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       # 5. Lancement des Tests
