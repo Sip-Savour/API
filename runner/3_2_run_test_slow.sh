@@ -5,7 +5,7 @@
 #SBATCH --time=48:00:00               # Temps max d'exécution (hh:mm:ss)
 #SBATCH --ntasks=1                    # Nombre de tâches (1 pour python)
 #SBATCH --cpus-per-task=16             # Nombre de threads / CPU à utiliser
-#SBATCH --mem=128G                     # Mémoire allouée
+#SBATCH --mem=64G                     # Mémoire allouée
 #SBATCH --mail-type=END,FAIL               # Quand envoyer un mail (END, FAIL, ALL)
 #SBATCH --mail-user=Aymeric.Mabire.Etu@univ-lemans.fr  # Ton adresse mail
 # --- Charger l'environnement Python ---
