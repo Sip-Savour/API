@@ -27,4 +27,4 @@ flake8
 
 # --- VOTRE BIBLIOTHÈQUE LOCALE ---
 # Indispensable pour que le workflow trouve le dossier automl
--e ./automl
+./automl
