@@ -1,6 +1,6 @@
-name: "Python CI - Sip&Savour"
+name: "Sip&Savour API CI"
 
-# Déclenchement sur toutes les branches et toutes les Pull Requests
+# Déclenche le workflow sur toutes les branches et toutes les Pull Requests
 on:
   push:
     branches:
@@ -10,36 +10,48 @@ on:
       - '**'
 
 jobs:
-  test-python:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Récupère le code du dépôt
+      # 1. Récupération du code source
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Installe Python (version 3.10 par défaut, ajustable)
-      - name: Set up Python
+      # 2. Configuration de l'environnement Python
+      - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          cache: 'pip' # Active le cache pour accélérer les futurs runs
+          cache: 'pip' # Active le cache pour accélérer les installations futures
 
-      # 3. Installation des outils de test et dépendances
+      # 3. Installation des dépendances
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest flake8 # flake8 pour le linting, pytest pour les tests
+          
+          # Installation des outils de test et de qualité
+          pip install pytest flake8
+          
+          # Installation des dépendances du fichier requirements (nettoyé)
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          
+          # INSTALLATION CRITIQUE : Votre bibliothèque locale 'automl'
+          # Le flag -e (editable) permet de lier le dossier au site-packages
+          if [ -d "automl" ]; then pip install -e ./automl; fi
 
-      # 4. Vérification de la qualité du code (Linting)
-      # Cette étape échouera s'il y a des erreurs de syntaxe flagrantes
-      - name: Lint with flake8
+      # 4. Analyse statique du code (Linting)
+      # Vérifie les erreurs de syntaxe graves avant de lancer les tests
+      - name: Lint with Flake8
         run: |
-          # Arrête le build s'il y a des erreurs de syntaxe Python ou des symboles non définis
+          # Arrête le build s'il y a des erreurs de syntaxe Python ou noms indéfinis
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Avertissements sur le style (ne bloque pas le build, informatif)
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      # 5. Exécution des tests unitaires
-      - name: Run Tests with Pytest
+      # 5. Exécution des Tests Unitaires
+      - name: Run Tests
         run: |
+          # Pytest découvrira automatiquement vos tests (fichiers commençant par test_*)
+          # Grâce à l'étape 3, il pourra faire "import automl" sans erreur
           pytest
