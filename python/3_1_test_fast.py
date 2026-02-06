@@ -4,131 +4,201 @@ import numpy as np
 import json
 import time
 import os
+import re
 
 # =============================================================================
-# 1. INITIALISATION (On charge tout une seule fois)
+# 1. INITIALISATION (Chargement Unique)
 # =============================================================================
 print("⏳ Initialisation du système (Chargement en RAM)...")
 t_load_start = time.time()
 
-# Chemins des fichiers
-GENERATED_DIR = "generated_files/pkl/"
+# --- CONFIGURATION DES CHEMINS (Basé sur votre fichier original) ---
 DATA_DIR      = "data/"
-MODEL_CLASSIF = "automl/results/best_model.pkl"
+GENERATED_DIR = "generated_files/pkl/"
+
+# Modèles et Données
+MODEL_CLASSIF = "automl/results/best_model.pkl" # Votre chemin spécifique
 MODEL_KNN     = GENERATED_DIR + "model_knn.pkl"
 VECT_KNN      = GENERATED_DIR + "vectorizer_knn.pkl"
-KEYWORDS      = GENERATED_DIR + "keywords_list.pkl"
 METADATA      = GENERATED_DIR + "wines_metadata.pkl"
-COLORS        = DATA_DIR      + "wine_colors.json"
+COLORS_FILE   = DATA_DIR      + "wine_colors.json"
 
-# Chargement
+# Nouveaux fichiers de configuration (Générés par 1_prepare.py)
+GROUPS_FILE   = GENERATED_DIR + "keyword_groups.pkl"  # Le dictionnaire de synonymes
+COLUMNS_FILE  = GENERATED_DIR + "keywords_list.pkl"   # L'ordre des colonnes pour l'IA
+
 try:
-    # 1. Le modèle de classification (Cerveau 1)
+    # A. Chargement des IA
     if os.path.exists(MODEL_CLASSIF):
         clf_model = joblib.load(MODEL_CLASSIF)
-        print("   ✅ Modèle Classification chargé.")
+        print("   ✅ Modèle Classification (AutoML) chargé.")
     else:
-        print(f"   ⚠️ '{MODEL_CLASSIF}' introuvable. La classification sera simulée.")
+        print(f"   ⚠️ Modèle Classification manquant : {MODEL_CLASSIF}")
+        print("      (Assurez-vous d'avoir lancé 2_train.py)")
         clf_model = None
 
-    # 2. Le système de recommandation (Cerveau 2)
-    knn_model = joblib.load(MODEL_KNN)
-    knn_vect  = joblib.load(VECT_KNN)
-    df_meta   = pd.read_pickle(METADATA)
-    keywords  = joblib.load(KEYWORDS)
-    print("   ✅ Système de Recommandation chargé.")
+    if os.path.exists(MODEL_KNN):
+        knn_model = joblib.load(MODEL_KNN)
+        knn_vect  = joblib.load(VECT_KNN)
+        print("   ✅ Moteur de Recommandation (KNN) chargé.")
+    else:
+        print(f"   ❌ ERREUR : Modèle KNN introuvable ({MODEL_KNN})")
+        exit(1)
+    
+    # B. Chargement des Données
+    if os.path.exists(METADATA):
+        df_meta = pd.read_pickle(METADATA)
+        print(f"   ✅ Métadonnées chargées ({len(df_meta)} vins).")
+    else:
+        # Fallback sur le CSV si le pickle n'existe pas
+        csv_path = DATA_DIR + "wines_db_full.csv"
+        print(f"   ⚠️ Pickle métadonnées absent, lecture CSV ({csv_path})...")
+        df_meta = pd.read_csv(csv_path, on_bad_lines='skip', low_memory=False)
+    
+    # C. Chargement de la "Carte Mentale" (Mapping Synonymes -> Features)
+    if os.path.exists(GROUPS_FILE) and os.path.exists(COLUMNS_FILE):
+        KEYWORD_GROUPS = joblib.load(GROUPS_FILE)
+        ORDERED_COLUMNS = joblib.load(COLUMNS_FILE)
+        print(f"   ✅ Dictionnaire de synonymes chargé : {len(KEYWORD_GROUPS)} méta-catégories.")
+    else:
+        print("   ❌ ERREUR CRITIQUE : Fichiers de configuration manquants (keyword_groups.pkl).")
+        print("      -> Avez-vous bien relancé '1_prepare.py' ?")
+        exit(1)
 
-    # 3. La configuration couleur
+    # D. Chargement Couleurs
     variety_map = {}
-    if os.path.exists(COLORS):
-        with open(COLORS, "r", encoding="utf-8") as f:
+    if os.path.exists(COLORS_FILE):
+        with open(COLORS_FILE, "r", encoding="utf-8") as f:
             variety_map = json.load(f)
-        print("   ✅ Filtres Couleurs chargés.")
     
 except Exception as e:
-    print(f"\n❌ ERREUR FATALE : Impossible de charger les ressources.\n   Détail : {e}")
+    print(f"\n❌ ERREUR FATALE LORS DU CHARGEMENT.\n   Détail : {e}")
     exit(1)
 
-print(f"🚀 Prêt en {time.time() - t_load_start:.2f} secondes.\n")
+print(f"🚀 Système prêt en {time.time() - t_load_start:.2f} secondes.\n")
 
 
 # =============================================================================
-# 2. FONCTION DE PRÉDICTION ULTRA-RAPIDE (0 I/O Disque)
+# 2. MOTEUR D'INTERPRÉTATION (La Traduction Intelligente)
+# =============================================================================
+def text_to_vector(user_text):
+    """
+    Transforme le texte utilisateur ("I want cherry") 
+    en vecteur compréhensible par l'IA ([1, 0, 0...]) 
+    en utilisant les groupes de synonymes.
+    """
+    if not user_text:
+        return np.zeros((1, len(ORDERED_COLUMNS)), dtype=int)
+
+    user_text = user_text.lower()
+    
+    # On crée un vecteur de zéros de la taille du nombre de colonnes d'entraînement
+    vector = np.zeros((1, len(ORDERED_COLUMNS)), dtype=int)
+    
+    # Pour chaque colonne connue de l'IA (ex: "red_fruit", "oak"...)
+    for i, col_name in enumerate(ORDERED_COLUMNS):
+        synonyms = KEYWORD_GROUPS.get(col_name, [])
+        
+        # On regarde si L'UN des synonymes est dans le texte
+        for word in synonyms:
+            # Recherche simple (plus robuste que regex complexe pour des tests rapides)
+            if word in user_text:
+                vector[0, i] = 1
+                break # Une seule occurrence suffit pour activer la feature
+                
+    return vector
+
+# =============================================================================
+# 3. FONCTION DE PRÉDICTION
 # =============================================================================
 def fast_predict(description, color_constraint=None):
     start = time.time()
     
-    # --- A. Classification (En mémoire) ---
+    # --- A. Classification (Type de vin probable) ---
     cepage_estime = "Non Disponible"
     if clf_model:
-        # Transformation One-Hot manuelle (sans passer par fichier .data)
-        vec = np.zeros((1, len(keywords)), dtype=int)
-        desc_lower = description.lower()
-        for i, word in enumerate(keywords):
-            if word in desc_lower:
-                vec[0, i] = 1
-        
-        # Prédiction directe via Sklearn
         try:
-            cepage_estime = clf_model.predict(vec)[0]
-        except:
-            pass
+            # 1. Traduction (User -> Vecteur IA via Synonymes)
+            vec_automl = text_to_vector(description)
+            
+            # 2. Prédiction
+            pred = clf_model.predict(vec_automl)
+            cepage_estime = pred[0]
+        except Exception as e:
+            cepage_estime = f"Erreur Classif"
+            # print(e) # Décommenter pour debug
 
-    # --- B. Recommandation KNN (En mémoire) ---
-    vec_knn = knn_vect.transform([description])
-    distances, indices = knn_model.kneighbors(vec_knn, n_neighbors=50)
-    
-    best_bottle = None
-    
-    for i in indices[0]:
-        candidat = df_meta.iloc[i]
-        variete = candidat['variety']
-        couleur_reelle = variety_map.get(variete, "unknown")
+    # --- B. Recommandation KNN (Recherche de bouteille) ---
+    # Le KNN utilise le vectorizer TF-IDF entraîné sur le texte brut
+    try:
+        vec_knn = knn_vect.transform([description])
+        distances, indices = knn_model.kneighbors(vec_knn, n_neighbors=50)
         
-        # Filtre Couleur
-        if color_constraint:
-            if couleur_reelle == "unknown" or couleur_reelle != color_constraint:
-                continue
+        best_bottle = None
+        status = "Aucun résultat"
         
-        best_bottle = candidat
-        break
-    
-    # Fallback si trop strict
-    if best_bottle is None:
-        best_bottle = df_meta.iloc[indices[0][0]]
-        status = "Fallback (Pas de match exact couleur)"
-    else:
-        status = "Optimal"
+        for i in indices[0]:
+            candidat = df_meta.iloc[i]
+            variete = candidat['variety']
+            
+            # --- FILTRE COULEUR ---
+            couleur_reelle = variety_map.get(variete, "unknown")
+            
+            if color_constraint:
+                # Si on connait la couleur et qu'elle ne matche pas -> Skip
+                if couleur_reelle != "unknown" and couleur_reelle != color_constraint:
+                    continue
+            
+            best_bottle = candidat
+            status = "Optimal"
+            break
+        
+        # Fallback (si le filtre couleur a tout éliminé)
+        if best_bottle is None and len(indices[0]) > 0:
+            best_bottle = df_meta.iloc[indices[0][0]]
+            status = "Fallback (Couleur ignorée)"
+            
+    except Exception as e:
+        best_bottle = None
+        status = f"Erreur KNN: {e}"
 
     duration = time.time() - start
-    return cepage_estime, best_bottle, duration
+    return cepage_estime, best_bottle, duration, status
 
 # =============================================================================
-# 3. BOUCLE DE TEST RAPIDE
+# 4. BOUCLE DE TEST
 # =============================================================================
 tests = [
-    ("Poulet Crème", "white butter creamy oak vanilla", None),
-    ("Risotto", "red light cherry earth berry", None),
-    ("Steak Poivre", "red spicy pepper dark structure", "red"),
-    ("Steak Piège (Force Blanc)", "red spicy pepper structure", "white"), # Le fameux test du Pinot Gris
-    ("Salade", "white crisp apple pear fresh", "white"),
+    # Test 1 : Vocabulaire simple (Doit activer 'tree_fruit' + 'citrus')
+    ("Poulet Classique", "chicken white citrus butter", "white"),
+    
+    # Test 2 : Utilisation des Synonymes (Doit activer 'smoke_tobacco' grâce à 'ash')
+    ("Barbecue Expert", "steak grilled ash cigar pepper", "red"),
+    
+    # Test 3 : Fruits précis (Doit activer 'black_fruit' grâce à 'cassis')
+    ("Bordeaux Style", "beef cassis cedar structured", "red"),
+    
+    # Test 4 : Dessert (Doit activer 'pastry' grâce à 'marzipan')
+    ("Dessert Noix", "cake marzipan honey sweet", "white"),
 ]
 
-print("=== DÉBUT DES TESTS RAPIDES ===")
-print(f"{'TEST':<25} | {'TEMPS':<10} | {'CLASSIF':<20} | {'RECO BOUTEILLE'}")
-print("-" * 100)
+print("=== DÉBUT DES TESTS INTELLIGENTS (VERSION SYNONYMES) ===")
+print(f"{'TEST':<20} | {'TEMPS':<8} | {'CLASSIF (IA)':<25} | {'RECO (KNN)'}")
+print("-" * 110)
 
 total_time = 0
 
 for nom, desc, color in tests:
-    cepage, bouteille, duree = fast_predict(desc, color)
+    cepage, bouteille, duree, st = fast_predict(desc, color)
     total_time += duree
     
-    # Affichage compact
-    nom_bouteille = bouteille['title'][:30] + "..." if bouteille is not None else "Aucune"
-    print(f"{nom:<25} | {duree:.4f}s    | {str(cepage):<20} | {nom_bouteille}")
+    if bouteille is not None:
+        nom_bouteille = str(bouteille['title'])[:40] + "..."
+    else:
+        nom_bouteille = "Aucune suggestion"
+        
+    print(f"{nom:<20} | {duree:.4f}s  | {str(cepage):<25} | {nom_bouteille}")
 
 avg = total_time / len(tests)
-print("-" * 100)
-print(f"⚡ Moyenne par prédiction : {avg:.4f} secondes")
-print(f"🚀 Vitesse estimée : {1/avg:.0f} requêtes / seconde")
+print("-" * 110)
+print(f"⚡ Moyenne : {avg:.4f} s/req")
