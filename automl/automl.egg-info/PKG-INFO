@@ -1,0 +1,450 @@
+Metadata-Version: 2.4
+Name: automl
+Version: 0.1.0
+Summary: AutoML pipeline for classification and regression
+Author-email: Vanessa <vanessa.antivackis.etu@univ-lemans.fr>
+License: MIT
+Keywords: automl,machine-learning,sklearn,optuna
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Science/Research
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: numpy>=1.21
+Requires-Dist: pandas>=1.3
+Requires-Dist: scikit-learn>=1.0
+Requires-Dist: optuna>=3.0
+Requires-Dist: scipy>=1.7
+Requires-Dist: xgboost>=1.5
+Requires-Dist: lightgbm>=3.3
+Requires-Dist: catboost>=1.0
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: black; extra == "dev"
+Requires-Dist: flake8; extra == "dev"
+
+# 🤖 AutoML
+
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![scikit-learn](https://img.shields.io/badge/sklearn-1.0+-orange.svg)](https://scikit-learn.org/)
+
+**AutoML** est un pipeline automatique de Machine Learning qui détecte le type de problème, nettoie les données et teste plusieurs modèles pour trouver le meilleur.
+
+---
+
+## ✨ Fonctionnalités
+
+| Fonctionnalité | Description |
+|----------------|-------------|
+| 🔍 **Détection automatique** | Classification binaire, multi-classe, multi-label, régression |
+| 🧹 **Nettoyage intelligent** | Imputation, encodage, scaling, gestion sparse/high-dim |
+| 🎯 **Optimisation Optuna** | Recherche automatique des hyperparamètres |
+| ⚡ **Parallélisation** | Multiprocessing avec gestion mémoire |
+| 💾 **Checkpoints** | Reprise automatique en cas d'interruption |
+| 📊 **2 modes** | `stable` (rapide) et `explo` (exhaustif) |
+
+---
+
+## 📦 Installation
+
+### Depuis les sources
+
+```bash
+git clone git@git-ssh.univ-lemans.fr:s2504630/master-1-automl.git
+cd automl
+pip install -e .
+```
+
+### Dépendances
+
+```bash
+pip install -r requirements.txt
+```
+
+**Dépendances principales :**
+- numpy >= 1.21
+- pandas >= 1.3
+- scikit-learn >= 1.0
+- optuna >= 3.0
+- xgboost >= 1.5
+- lightgbm >= 3.3
+- catboost >= 1.0
+
+---
+
+## 🚀 Utilisation rapide
+
+### API Python
+
+```python
+python3
+
+import automl
+
+# Entraînement sur un dataset
+results = automl.fit("/info/corpus/ChallengeMachineLearning/data_X/data_X", mode="stable|explo")
+
+# Afficher les résultats
+automl.eval()
+```
+
+### Exemple complet
+
+```python
+import automl
+
+# Mode stable (rapide, ~13 modèles)
+results = automl.fit(
+    data_path="info/corpus/ChallengeMachineLearning/data_X/data_X",
+    mode="stable",
+    iterations=50,      # Itérations Optuna par modèle
+    n_jobs=4            # Parallélisme
+)
+
+# Afficher le meilleur modèle
+print(f"Meilleur: {results['best_models'][0]}")
+
+# Mode exploratoire (exhaustif, ~27 modèles)
+results_explo = automl.fit("info/corpus/ChallengeMachineLearning/data_X/data_X", mode="explo", iterations=10)
+```
+
+### Multi-datasets
+
+```python
+import automl
+
+datasets = [
+    {"file": "info/corpus/ChallengeMachineLearning/data_X/data_X", "expected": "classification"},
+    {"file": "info/corpus/ChallengeMachineLearning/data_X/data_X", "expected": "regression"},
+    {"file": "info/corpus/ChallengeMachineLearning/data_X/data_X", "expected": "multi-label"},
+]
+
+# Traitement par lot avec checkpoints automatiques
+all_results = automl.fit_multiple(datasets, mode="stable")
+```
+
+---
+
+## 📁 Format des données
+
+Le package attend des fichiers au format suivant :
+
+```
+data/
+├── my_dataset.data      # Features (dense ou SVMLight sparse)
+└── my_dataset.solution  # Target (une ou plusieurs colonnes)
+```
+
+### Format dense (.data)
+
+```
+1.5 2.3 0.8 4.1
+2.1 1.9 0.5 3.8
+...
+```
+
+### Format sparse SVMLight (.data)
+
+```
+0:1.5 2:0.8 10:4.1
+1:2.1 2:0.5 8:3.8
+...
+```
+
+### Target (.solution)
+
+```
+0
+1
+0
+...
+```
+
+Ou multi-label :
+```
+1 0 1
+0 1 0
+1 1 0
+...
+```
+
+---
+
+## 🔧 Configuration
+
+### Paramètres de `fit()`
+
+| Paramètre | Type | Défaut | Description |
+|-----------|------|--------|-------------|
+| `data_path` | str | - | Chemin vers le dataset (sans extension) |
+| `mode` | str | `"stable"` | `"stable"` ou `"explo"` |
+| `iterations` | int | `50` | Nombre d'itérations Optuna |
+| `n_jobs` | int | `2` | Nombre de processus parallèles |
+| `autosave_interval` | int | `600` | Intervalle sauvegarde auto (secondes) |
+
+### Modes disponibles
+
+| Mode | Modèles | Vitesse | Usage |
+|------|---------|---------|-------|
+| `stable` | ~13-16 | ⚡ Rapide | Production, datasets volumineux |
+| `explo` | ~25-30 | 🐢 Lent | Exploration, benchmarking |
+
+---
+
+## 📊 Modèles supportés
+
+### Classification
+
+| Mode | Modèles |
+|------|---------|
+| **Stable** | LogisticRegression, RandomForest, GradientBoosting, XGBoost, LightGBM, CatBoost, SVC, MLP, GaussianNB... |
+| **Explo** | + AdaBoost, ExtraTrees, HistGradientBoosting, NuSVC, KNN, NaiveBayes variants, LDA, QDA, GaussianProcess... |
+
+### Régression
+
+| Mode | Modèles |
+|------|---------|
+| **Stable** | LinearRegression, Ridge, Lasso, ElasticNet, RandomForest, GradientBoosting, XGBoost, LightGBM, CatBoost, SVR, MLP... |
+| **Explo** | + BayesianRidge, HuberRegressor, AdaBoost, HistGradientBoosting, GaussianProcess... |
+
+---
+
+## 📂 Structure du projet
+
+```
+automl/
+├── __init__.py              # API publique (fit, eval)
+├── _config.py               # Configuration globale
+│
+├── core/
+│   ├── __init__.py
+│   ├── trainer.py           # fit(), fit_multiple()
+│   ├── runner.py            # run_all_models()
+│   └── evaluator.py         # eval(), show_results()
+│
+├── classification/
+│   ├── __init__.py
+│   ├── _base.py             # Params & evaluate_model communs
+│   ├── stable.py            # Mode stable
+│   └── explo.py             # Mode exploratoire
+│
+├── regression/
+│   ├── __init__.py
+│   ├── _base.py
+│   ├── stable.py
+│   └── explo.py
+│
+├── utils/
+│   ├── __init__.py
+│   ├── logging.py           # log(), save_checkpoint()
+│   ├── io.py                # load_data(), importer()
+│   ├── cleaning.py          # auto_clean(), verif_quality()
+│   ├── detection.py         # detect_type_model()
+│   └── optuna.py            # optuna_search()
+│
+├── pyproject.toml
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## 🔄 Pipeline de traitement
+
+```
+┌─────────────────┐
+│   load_data()   │  Chargement .data + .solution
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│ detect_type()   │  Classification / Régression / Multi-label
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│  auto_clean()   │  Imputation, Encodage, Scaling
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│ run_all_models()│  Test parallèle + Optuna
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│    Résultats    │  Classement + Sauvegarde
+└─────────────────┘
+```
+
+---
+
+## 💾 Fichiers générés
+
+```
+logs/
+├── automl_stable_log.txt       # Logs d'exécution
+├── classification_stable_log.txt
+└── regression_stable_log.txt
+
+checkpoints/
+├── best_model_binary-classification_stable.pkl
+└── checkpoint_stable.pkl       # Reprise automatique
+
+results/
+├── results_stable.pkl          # Résultats finaux
+└── results_explo.pkl
+```
+
+---
+
+## 🖥️ CLI (Ligne de commande)
+
+### Afficher les résultats
+
+```bash
+# Via le point d'entrée installé
+automl-results --mode stable --top 10
+
+# Ou directement
+python -m automl.core.evaluator --mode explo
+```
+
+### Options CLI
+
+| Option | Description |
+|--------|-------------|
+| `--mode` | `stable` ou `explo` |
+| `--top` | Nombre de modèles à afficher (défaut: 5) |
+| `--dir` | Répertoire contenant les résultats |
+
+---
+
+## 🧪 Exemple de résultats
+
+```
+==================================================
+📁 Dataset: info/corpus/ChallengeMachineLearning/data_X/data_X
+   Type: multi-classification
+
+   🏆 Top 5 modèles:
+   1. RandomForestClassifier          | Score: 0.9667
+   2. GradientBoostingClassifier      | Score: 0.9667
+   3. XGBClassifier                   | Score: 0.9333
+   4. LGBMClassifier                  | Score: 0.9333
+   5. SVC                             | Score: 0.9333
+```
+
+---
+
+## ⚠️ Gestion des erreurs
+
+Le pipeline gère automatiquement :
+
+- **Interruptions** (Ctrl+C) : Sauvegarde checkpoint avant arrêt
+- **Erreurs modèles** : Skip et log, continue avec les autres
+- **Mémoire** : Réduction automatique `n_jobs` si dataset volumineux
+- **Datasets sparse** : Détection et traitement optimisé
+
+```python
+# Reprise automatique après interruption
+results = automl.fit("data/big_dataset", mode="stable")
+# Si interrompu, relancer la même commande reprend où ça s'était arrêté
+```
+
+---
+
+## 🔧 Configuration avancée
+
+### Modifier les répertoires
+
+```python
+import automl._config as config
+
+config.LOG_DIR = Path("/custom/logs")
+config.RESULTS_DIR = Path("/custom/results")
+config.CHECKPOINT_DIR = Path("/custom/checkpoints")
+```
+
+### Personnaliser les paramètres par défaut
+
+```python
+from automl.classification._base import DEFAULT_PARAMS_STABLE
+
+# Modifier les paramètres d'un modèle
+DEFAULT_PARAMS_STABLE["RandomForestClassifier"]["n_estimators"] = 200
+```
+
+---
+
+## 🤝 Contribuer
+
+1. Fork le projet
+2. Créer une branche (`git checkout -b feature/nouvelle-fonctionnalite`)
+3. Commit (`git commit -m 'Ajout fonctionnalité X'`)
+4. Push (`git push origin feature/nouvelle-fonctionnalite`)
+5. Ouvrir une Pull Request
+
+---
+
+## 📝 TODO
+
+- [ ] Corriger `regression/explo.py` (actuellement template)
+- [ ] Ajouter support CSV/Parquet natif
+- [ ] Interface web (Streamlit/Gradio)
+- [ ] Export modèle entraîné (pickle/joblib/ONNX)
+- [ ] Métriques supplémentaires (F1, AUC, RMSE...)
+- [ ] Cross-validation optionnelle
+- [ ] Feature importance automatique
+
+---
+
+## 📄 Licence
+
+MIT License - voir [LICENSE](LICENSE) pour plus de détails.
+
+---
+
+## 👥 Auteurs
+- **Aymeric** - *Développement initital*
+- **Vanessa** - *Développement*
+
+---
+
+## 🙏 Remerciements
+
+- [scikit-learn](https://scikit-learn.org/)
+- [Optuna](https://optuna.org/)
+- [XGBoost](https://xgboost.readthedocs.io/)
+- [LightGBM](https://lightgbm.readthedocs.io/)
+- [CatBoost](https://catboost.ai/)
+```
+
+---
+
+## 📋 Récapitulatif de tous les fichiers du package
+
+| Fichier | Statut |
+|---------|--------|
+| `pyproject.toml` | ✅ |
+| `requirements.txt` | ✅ |
+| `README.md` | ✅ |
+| `automl/__init__.py` | ✅ |
+| `automl/_config.py` | ✅ |
+| `automl/core/__init__.py` | ✅ |
+| `automl/core/trainer.py` | ✅ |
+| `automl/core/runner.py` | ✅ |
+| `automl/core/evaluator.py` | ✅ |
+| `automl/utils/__init__.py` | ✅ |
+| `automl/utils/logging.py` | ✅ |
+| `automl/utils/io.py` | ✅ |
+| `automl/utils/cleaning.py` | ✅ |
+| `automl/utils/detection.py` | ✅ |
+| `automl/utils/optuna.py` | ✅ |
+| `automl/classification/__init__.py` | ✅ |
+| `automl/classification/_base.py` | ✅ |
+| `automl/classification/stable.py` | ✅ |
+| `automl/classification/explo.py` | ✅ |
+| `automl/regression/__init__.py` | ✅ |
+| `automl/regression/_base.py` | ✅ |
+| `automl/regression/stable.py` | ✅ |
+| `automl/regression/explo.py` | ⚠️ Template (à compléter) |

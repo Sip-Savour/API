@@ -1,0 +1,2 @@
+[console_scripts]
+automl-results = automl.core.evaluator:main
