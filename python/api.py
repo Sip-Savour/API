@@ -10,10 +10,13 @@ import json
 app = FastAPI(title="Sommelier IA API", description="API de recommandation de vin pour Android")
 
 # Chemins (Identiques à votre script de test)
-GENERATED_DIR = "generated_files/pkl/"
-DATA_DIR      = "data/"
+BASE_DIR = "../" 
 
-MODEL_CLASSIF = "automl/results/best_model.pkl"
+GENERATED_DIR = BASE_DIR + "generated_files/pkl/"
+DATA_DIR      = BASE_DIR + "data/"
+
+# Mise à jour des chemins avec BASE_DIR
+MODEL_CLASSIF = BASE_DIR + "automl/results/best_model.pkl"
 MODEL_KNN     = GENERATED_DIR + "model_knn.pkl"
 VECT_KNN      = GENERATED_DIR + "vectorizer_knn.pkl"
 METADATA      = GENERATED_DIR + "wines_metadata.pkl"
