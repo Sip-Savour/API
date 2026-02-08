@@ -6,85 +6,80 @@ import time
 import os
 import re
 
-# =============================================================================
-# 1. INITIALISATION (Chargement Unique)
-# =============================================================================
+# ================= INITIALISATION =================
+
 print("⏳ Initialisation du système (Chargement en RAM)...")
 t_load_start = time.time()
 
-# --- CONFIGURATION DES CHEMINS (Basé sur votre fichier original) ---
+# ================= CONFIGURATION =================
+
 DATA_DIR      = "data/"
 GENERATED_DIR = "generated_files/pkl/"
 
 # Modèles et Données
-MODEL_CLASSIF = "automl/results/best_model.pkl" # Votre chemin spécifique
+MODEL_CLASSIF = "automl/results/best_model.pkl" 
 MODEL_KNN     = GENERATED_DIR + "model_knn.pkl"
 VECT_KNN      = GENERATED_DIR + "vectorizer_knn.pkl"
 METADATA      = GENERATED_DIR + "wines_metadata.pkl"
 COLORS_FILE   = DATA_DIR      + "wine_colors.json"
 
-# Nouveaux fichiers de configuration (Générés par 1_prepare.py)
-GROUPS_FILE   = GENERATED_DIR + "keyword_groups.pkl"  # Le dictionnaire de synonymes
-COLUMNS_FILE  = GENERATED_DIR + "keywords_list.pkl"   # L'ordre des colonnes pour l'IA
+GROUPS_FILE   = GENERATED_DIR + "keyword_groups.pkl"  
+COLUMNS_FILE  = GENERATED_DIR + "keywords_list.pkl"   
 
 try:
-    # A. Chargement des IA
+    # Chargement des IA
     if os.path.exists(MODEL_CLASSIF):
         clf_model = joblib.load(MODEL_CLASSIF)
-        print("   ✅ Modèle Classification (AutoML) chargé.")
+        print("   Modèle Classification (AutoML) chargé.")
     else:
-        print(f"   ⚠️ Modèle Classification manquant : {MODEL_CLASSIF}")
-        print("      (Assurez-vous d'avoir lancé 2_train.py)")
+        print(f"   Modèle Classification manquant : {MODEL_CLASSIF}")
         clf_model = None
 
     if os.path.exists(MODEL_KNN):
         knn_model = joblib.load(MODEL_KNN)
         knn_vect  = joblib.load(VECT_KNN)
-        print("   ✅ Moteur de Recommandation (KNN) chargé.")
+        print("   Moteur de Recommandation (KNN) chargé.")
     else:
-        print(f"   ❌ ERREUR : Modèle KNN introuvable ({MODEL_KNN})")
+        print(f"   ERREUR : Modèle KNN introuvable ({MODEL_KNN})")
         exit(1)
     
-    # B. Chargement des Données
+    # Chargement des Données
     if os.path.exists(METADATA):
         df_meta = pd.read_pickle(METADATA)
-        print(f"   ✅ Métadonnées chargées ({len(df_meta)} vins).")
+        print(f"   Métadonnées chargées ({len(df_meta)} vins).")
     else:
         # Fallback sur le CSV si le pickle n'existe pas
         csv_path = DATA_DIR + "wines_db_full.csv"
-        print(f"   ⚠️ Pickle métadonnées absent, lecture CSV ({csv_path})...")
+        print(f"   Pickle métadonnées absent, lecture CSV ({csv_path})...")
         df_meta = pd.read_csv(csv_path, on_bad_lines='skip', low_memory=False)
     
-    # C. Chargement de la "Carte Mentale" (Mapping Synonymes -> Features)
+    # Chargement de la "Carte Mentale" (Mapping Synonymes -> Features)
     if os.path.exists(GROUPS_FILE) and os.path.exists(COLUMNS_FILE):
         KEYWORD_GROUPS = joblib.load(GROUPS_FILE)
         ORDERED_COLUMNS = joblib.load(COLUMNS_FILE)
-        print(f"   ✅ Dictionnaire de synonymes chargé : {len(KEYWORD_GROUPS)} méta-catégories.")
+        print(f"   Dictionnaire de synonymes chargé : {len(KEYWORD_GROUPS)} méta-catégories.")
     else:
-        print("   ❌ ERREUR CRITIQUE : Fichiers de configuration manquants (keyword_groups.pkl).")
-        print("      -> Avez-vous bien relancé '1_prepare.py' ?")
+        print("   ERREUR CRITIQUE : Fichiers de configuration manquants (keyword_groups.pkl).")
         exit(1)
 
-    # D. Chargement Couleurs
+    # Chargement Couleurs
     variety_map = {}
     if os.path.exists(COLORS_FILE):
         with open(COLORS_FILE, "r", encoding="utf-8") as f:
             variety_map = json.load(f)
     
 except Exception as e:
-    print(f"\n❌ ERREUR FATALE LORS DU CHARGEMENT.\n   Détail : {e}")
+    print(f"\n ERREUR FATALE LORS DU CHARGEMENT.\n   Détail : {e}")
     exit(1)
 
-print(f"🚀 Système prêt en {time.time() - t_load_start:.2f} secondes.\n")
+print(f"Système prêt en {time.time() - t_load_start:.2f} secondes.\n")
 
 
-# =============================================================================
-# 2. MOTEUR D'INTERPRÉTATION (La Traduction Intelligente)
-# =============================================================================
+
 def text_to_vector(user_text):
     """
-    Transforme le texte utilisateur ("I want cherry") 
-    en vecteur compréhensible par l'IA ([1, 0, 0...]) 
+    Transforme l'entrée utilisateur ("I want cherry") 
+    en vecteur compréhensible pour le modèle([1, 0, 0...]) 
     en utilisant les groupes de synonymes.
     """
     if not user_text:
@@ -108,27 +103,25 @@ def text_to_vector(user_text):
                 
     return vector
 
-# =============================================================================
-# 3. FONCTION DE PRÉDICTION
-# =============================================================================
+# ================= PREDICTION =================
 def fast_predict(description, color_constraint=None):
     start = time.time()
     
-    # --- A. Classification (Type de vin probable) ---
+    # --- Classification (Type de vin probable) ---
     cepage_estime = "Non Disponible"
     if clf_model:
         try:
-            # 1. Traduction (User -> Vecteur IA via Synonymes)
+            # Traduction (User -> Vecteur IA via Synonymes)
             vec_automl = text_to_vector(description)
             
-            # 2. Prédiction
+            # Prédiction
             pred = clf_model.predict(vec_automl)
             cepage_estime = pred[0]
         except Exception as e:
             cepage_estime = f"Erreur Classif"
             # print(e) # Décommenter pour debug
 
-    # --- B. Recommandation KNN (Recherche de bouteille) ---
+    # --- Recommandation KNN (Recherche de bouteille) ---
     # Le KNN utilise le vectorizer TF-IDF entraîné sur le texte brut
     try:
         vec_knn = knn_vect.transform([description])
@@ -165,24 +158,23 @@ def fast_predict(description, color_constraint=None):
     duration = time.time() - start
     return cepage_estime, best_bottle, duration, status
 
-# =============================================================================
-# 4. BOUCLE DE TEST
-# =============================================================================
+
+# ================= TEST =================
 tests = [
-    # Test 1 : Vocabulaire simple (Doit activer 'tree_fruit' + 'citrus')
+    # Test 1 : Vocabulaire simple 
     ("Poulet Classique", "chicken white citrus butter", "white"),
     
-    # Test 2 : Utilisation des Synonymes (Doit activer 'smoke_tobacco' grâce à 'ash')
+    # Test 2 : Utilisation des Synonymes 
     ("Barbecue Expert", "steak grilled ash cigar pepper", "red"),
     
-    # Test 3 : Fruits précis (Doit activer 'black_fruit' grâce à 'cassis')
+    # Test 3 : Fruits précis 
     ("Bordeaux Style", "beef cassis cedar structured", "red"),
     
-    # Test 4 : Dessert (Doit activer 'pastry' grâce à 'marzipan')
+    # Test 4 : Dessert 
     ("Dessert Noix", "cake marzipan honey sweet", "white"),
 ]
 
-print("=== DÉBUT DES TESTS INTELLIGENTS (VERSION SYNONYMES) ===")
+print("=== DÉBUT DES TESTS ===")
 print(f"{'TEST':<20} | {'TEMPS':<8} | {'CLASSIF (IA)':<25} | {'RECO (KNN)'}")
 print("-" * 110)
 

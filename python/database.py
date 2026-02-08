@@ -1,8 +1,7 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, Text
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
-# 1. Connexion au fichier SQLite (sera créé localement)
-# On utilise "../" pour le mettre à la racine du projet API, pas dans /python/
+# ================= CONFIGURATION =================
 SQLALCHEMY_DATABASE_URL = "sqlite:///../sommelier.db"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
@@ -17,13 +16,13 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
-    password_hash = Column(String) # On stockera le hash, jamais le clair
+    password_hash = Column(String) 
     
     favorites = relationship("Favorite", back_populates="user")
 
 class Wine(Base):
     __tablename__ = "wines"
-    id = Column(Integer, primary_key=True, index=True) # ID unique
+    id = Column(Integer, primary_key=True, index=True) 
     
     # Infos de base
     title = Column(String, index=True)
@@ -31,11 +30,9 @@ class Wine(Base):
     variety = Column(String, index=True)
     
     # Infos détaillées
-    price = Column(Float, nullable=True)
     winery = Column(String, nullable=True)
     province = Column(String, nullable=True)
     country = Column(String, nullable=True)
-    points = Column(Integer, nullable=True) # Note WineEnthusiast
 
     favorited_by = relationship("Favorite", back_populates="wine")
 
@@ -48,10 +45,10 @@ class Favorite(Base):
     user = relationship("User", back_populates="favorites")
     wine = relationship("Wine", back_populates="favorited_by")
 
-# Fonction pour créer les tables
+
 def init_db():
     Base.metadata.create_all(bind=engine)
-    print("✅ Base de données initialisée (sommelier.db).")
+    print("Base de données initialisée (sommelier.db).")
 
 if __name__ == "__main__":
     init_db()

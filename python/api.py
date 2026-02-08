@@ -9,13 +9,11 @@ import json
 # ================= CONFIGURATION =================
 app = FastAPI(title="Sommelier IA API", description="API de recommandation de vin pour Android")
 
-# Chemins (Identiques à votre script de test)
 BASE_DIR = "../" 
 
 GENERATED_DIR = BASE_DIR + "generated_files/pkl/"
 DATA_DIR      = BASE_DIR + "data/"
 
-# Mise à jour des chemins avec BASE_DIR
 MODEL_CLASSIF = BASE_DIR + "automl/results/best_model.pkl"
 MODEL_KNN     = GENERATED_DIR + "model_knn.pkl"
 VECT_KNN      = GENERATED_DIR + "vectorizer_knn.pkl"
@@ -24,14 +22,13 @@ GROUPS_FILE   = GENERATED_DIR + "keyword_groups.pkl"
 COLUMNS_FILE  = GENERATED_DIR + "keywords_list.pkl"
 COLORS_FILE   = DATA_DIR      + "wine_colors.json"
 
-# Variables Globales (Chargées au démarrage)
 ai_resources = {}
 
 # ================= MODÈLES DE DONNÉES (JSON) =================
 # Ce que l'Android envoie
 class WineRequest(BaseModel):
     features: str        # Ex: "body_full tannins pepper"
-    color: str = None    # Ex: "red" ou null
+    color: str = None    # Ex: "red","white","rose" ou null
 
 # Ce que l'Android reçoit
 class BottleInfo(BaseModel):
@@ -47,27 +44,27 @@ class WineResponse(BaseModel):
 # ================= CHARGEMENT AU DÉMARRAGE =================
 @app.on_event("startup")
 def load_resources():
-    print("⏳ Chargement des cerveaux de l'IA...")
+    print("Chargement des cerveaux de l'IA...")
     try:
-        # 1. Chargement Classification (Optionnel si erreur dimensions)
+        #Chargement Classification 
         if os.path.exists(MODEL_CLASSIF):
             ai_resources['clf'] = joblib.load(MODEL_CLASSIF)
         else:
             ai_resources['clf'] = None
             print("⚠️ Modèle Classification absent (Mode Recommandation seule).")
 
-        # 2. Chargement KNN (Requis)
+        # Chargement KNN 
         ai_resources['knn'] = joblib.load(MODEL_KNN)
         ai_resources['vect'] = joblib.load(VECT_KNN)
         
-        # 3. Données & Métadonnées
+        # Données & Métadonnées
         if os.path.exists(METADATA):
             ai_resources['meta'] = pd.read_pickle(METADATA)
         else:
             # Fallback CSV
             ai_resources['meta'] = pd.read_csv(DATA_DIR + "wines_db_full.csv", on_bad_lines='skip', low_memory=False)
 
-        # 4. Synonymes & Couleurs
+        # Synonymes & Couleurs
         ai_resources['groups'] = joblib.load(GROUPS_FILE)
         ai_resources['cols'] = joblib.load(COLUMNS_FILE)
         
@@ -114,16 +111,15 @@ def predict_wine(req: WineRequest):
     description = req.features
     color_constraint = req.color
     
-    # --- 1. CLASSIFICATION (Tentative de deviner le cépage) ---
+    # --- CLASSIFICATION ---
     cepage_estime = "Inconnu"
     if ai_resources['clf']:
         try:
             vec = text_to_vector(description)
             cepage_estime = ai_resources['clf'].predict(vec)[0]
         except:
-            pass # On ignore les erreurs de dimension ici, le KNN est prioritaire
-
-    # --- 2. RECOMMANDATION (KNN) ---
+            pass 
+    # --- RECOMMANDATION (KNN) ---
     try:
         # Vectorisation TF-IDF
         vec_knn = ai_resources['vect'].transform([description])
@@ -158,8 +154,7 @@ def predict_wine(req: WineRequest):
             "cepage": str(cepage_estime),
             "bottle": {
                 "title": str(best_bottle['title']),
-                "description": str(best_bottle['description'])[:200] + "...", # On coupe un peu
-                "price": float(best_bottle['price']) if pd.notnull(best_bottle['price']) else 0.0,
+                "description": str(best_bottle['description']), 
                 "variety": str(best_bottle['variety'])
             }
         }

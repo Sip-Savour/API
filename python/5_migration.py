@@ -3,18 +3,18 @@ import numpy as np
 from database import SessionLocal, Wine, init_db
 import os
 
-# Chemins (relatifs au dossier python/)
+# ================= CONFIGURATION =================
 CSV_FILE = "data/wines_db_full.csv"
 
 def migrate():
-    print("⏳ Démarrage de la migration CSV -> SQL...")
+    print("Démarrage de la migration CSV -> SQL...")
     
-    # 1. Création des tables vides
+    # Création des tables vides
     init_db()
     
-    # 2. Lecture du CSV
+    # Lecture du CSV
     if not os.path.exists(CSV_FILE):
-        print(f"❌ Erreur : Fichier CSV introuvable ici : {CSV_FILE}")
+        print(f"Erreur : Fichier CSV introuvable ici : {CSV_FILE}")
         return
 
     df = pd.read_csv(CSV_FILE)
@@ -24,12 +24,12 @@ def migrate():
     
     print(f"   > Chargement de {len(df)} vins...")
 
-    # 3. Insertion en base
+    # Insertion en base
     db = SessionLocal()
     
     # Vérif anti-doublon (si on lance le script 2 fois)
     if db.query(Wine).count() > 0:
-        print("⚠️ La base contient déjà des données. Migration annulée.")
+        print("La base contient déjà des données. Migration annulée.")
         db.close()
         return
 
@@ -50,7 +50,6 @@ def migrate():
         )
         batch.append(wine)
         
-        # On insère par paquets de 1000 pour aller vite
         if len(batch) >= 1000:
             db.add_all(batch)
             db.commit()
@@ -58,13 +57,12 @@ def migrate():
             count += 1000
             print(f"   > {count} vins insérés...", end='\r')
             
-    # Insérer le reste
     if batch:
         db.add_all(batch)
         db.commit()
         
     db.close()
-    print(f"\n✅ Migration Terminée ! Base de données prête.")
+    print(f"\nMigration Terminée ! Base de données prête.")
 
 if __name__ == "__main__":
     migrate()
