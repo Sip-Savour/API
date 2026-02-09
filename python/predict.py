@@ -18,15 +18,18 @@ except ImportError:
 # ================= CONFIGURATION =================
 t_init = time.time()
 
-DATA_DIR      = "data/"
-GENERATED_DIR = "generated_files/pkl/"
+BASE_DIR = "../" 
 
+GENERATED_DIR = BASE_DIR + "generated_files/pkl/"
+DATA_DIR      = BASE_DIR + "data/"
+
+MODEL_CLASSIF = BASE_DIR + "automl/results/best_model.pkl"
 MODEL_KNN     = GENERATED_DIR + "model_knn.pkl"
 VECT_KNN      = GENERATED_DIR + "vectorizer_knn.pkl"
 METADATA      = GENERATED_DIR + "wines_metadata.pkl"
-COLORS_FILE   = DATA_DIR      + "wine_colors.json"
 GROUPS_FILE   = GENERATED_DIR + "keyword_groups.pkl"
 COLUMNS_FILE  = GENERATED_DIR + "keywords_list.pkl"
+COLORS_FILE   = DATA_DIR      + "wine_colors.json"
 
 try:
     if os.path.exists(MODEL_KNN):
