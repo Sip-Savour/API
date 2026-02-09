@@ -95,14 +95,8 @@ def predict_wine(req: WineRequest):
         info_bouteille = BottleInfo(
             title=str(safe_get('title', "Titre Inconnu")),
             description=str(safe_get('description', "Pas de description")),
-            price=float(safe_get('price', 0.0)),   # <--- C'est ici que ça plantait
             variety=str(safe_get('variety', "Inconnu")),
             
-            # Champs optionnels
-            winery=str(safe_get('winery', "Inconnu")),
-            country=str(safe_get('country', "Inconnu")),
-            province=str(safe_get('province', "Inconnu")),
-            points=int(safe_get('points', 0))
         )
 
         return WineResponse(
