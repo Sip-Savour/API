@@ -71,7 +71,6 @@ class UserResponse(BaseModel):
 def home():
     return {"status": "online", "message": "API Sommelier opérationnelle."}
 
-# --- Route 1 : Prédiction (IA) ---
 @app.post("/predict", response_model=WineResponse)
 def predict_wine(req: WineRequest):
     """
@@ -79,26 +78,31 @@ def predict_wine(req: WineRequest):
     Retourne le cépage estimé et la meilleure bouteille.
     """
     try:
-        # Appel à predict.py (qui renvoie maintenant 2 valeurs)
+        # Appel à predict.py
         cepage_estime, bouteille_trouvee = fast_predict(req.features, req.color)
 
         if bouteille_trouvee is None:
-            # On renvoie quand même une réponse valide (mais vide) pour ne pas crasher l'app Android
             return WineResponse(cepage=str(cepage_estime), bottle=None)
 
-        # Gestion des valeurs nulles (NaN) qui font planter JSON
-        def clean_val(val, default):
+        # --- CORRECTION DE SÉCURITÉ ICI ---
+        # On utilise .get() pour éviter le crash "KeyError: 'price'"
+        # Si la colonne n'existe pas, on met une valeur par défaut.
+        
+        def safe_get(key, default):
+            val = bouteille_trouvee.get(key, default)
             return default if pd.isna(val) else val
 
         info_bouteille = BottleInfo(
-            title=str(bouteille_trouvee['title']),
-            description=str(bouteille_trouvee['description']),
-            price=clean_val(bouteille_trouvee['price'], 0.0),
-            variety=str(bouteille_trouvee['variety']),
-            winery=clean_val(bouteille_trouvee.get('winery'), "Inconnu"),
-            country=clean_val(bouteille_trouvee.get('country'), "Inconnu"),
-            province=clean_val(bouteille_trouvee.get('province'), "Inconnu"),
-            points=clean_val(bouteille_trouvee.get('points'), 0)
+            title=str(safe_get('title', "Titre Inconnu")),
+            description=str(safe_get('description', "Pas de description")),
+            price=float(safe_get('price', 0.0)),   # <--- C'est ici que ça plantait
+            variety=str(safe_get('variety', "Inconnu")),
+            
+            # Champs optionnels
+            winery=str(safe_get('winery', "Inconnu")),
+            country=str(safe_get('country', "Inconnu")),
+            province=str(safe_get('province', "Inconnu")),
+            points=int(safe_get('points', 0))
         )
 
         return WineResponse(
@@ -108,6 +112,7 @@ def predict_wine(req: WineRequest):
 
     except Exception as e:
         print(f"❌ Erreur API Predict : {e}")
+        # On renvoie l'erreur détaillée pour comprendre
         raise HTTPException(status_code=500, detail=str(e))
 
 # --- Route 2 : Inscription (SQL) ---
