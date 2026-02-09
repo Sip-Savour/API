@@ -8,3 +8,6 @@
 [2026-02-06 09:46:15] Tâche: multi-classification | Mode: stable
 [2026-02-06 15:15:37]  10 modèles testés
 [2026-02-06 15:15:37]  Meilleur: RandomForestClassifier (0.3072)
+[2026-02-08 19:35:30] Tâche: multi-classification | Mode: stable
+[2026-02-08 23:50:06]  10 modèles testés
+[2026-02-08 23:50:06]  Meilleur: RandomForestClassifier (0.3098)

@@ -1,0 +1,67 @@
+[2026-02-09 07:44:23] Démarrage prédiction sur : chicken white citrus butter
+[2026-02-09 07:50:39]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 07:50:39] Démarrage prédiction sur : steak grilled pepper smoke
+[2026-02-09 07:51:45]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 07:51:45] Démarrage prédiction sur : cake marzipan honey
+[2026-02-09 07:52:47]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 08:06:03] Démarrage prédiction sur :    red_fruit  black_fruit  dried_fruit  ...  complex  age  finish_long
+0          0            0            0  ...        0    0            0
+
+[1 rows x 33 columns]
+[2026-02-09 08:07:05]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 08:07:05] Démarrage prédiction sur :    red_fruit  black_fruit  dried_fruit  ...  complex  age  finish_long
+0          0            0            0  ...        0    0            0
+
+[1 rows x 33 columns]
+[2026-02-09 08:08:07]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 08:08:07] Démarrage prédiction sur :    red_fruit  black_fruit  dried_fruit  ...  complex  age  finish_long
+0          0            0            0  ...        0    0            0
+
+[1 rows x 33 columns]
+[2026-02-09 08:09:09]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 08:13:39] Démarrage prédiction sur : temp_query.csv
+[2026-02-09 08:14:41]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 08:14:42] Démarrage prédiction sur : temp_query.csv
+[2026-02-09 08:15:44]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 08:15:44] Démarrage prédiction sur : temp_query.csv
+[2026-02-09 08:16:46]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 08:20:39] Démarrage prédiction sur : temp_query
+[2026-02-09 08:21:41]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 08:22:49] Démarrage prédiction sur : temp_query
+[2026-02-09 08:23:51]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 08:32:39] Démarrage prédiction sur : temp_query
+[2026-02-09 08:33:41]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 08:33:41] Démarrage prédiction sur : temp_query
+[2026-02-09 08:34:43]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 08:34:43] Démarrage prédiction sur : temp_query
+[2026-02-09 08:35:45]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 08:48:26] Démarrage prédiction sur : temp_query
+[2026-02-09 08:49:29]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 08:49:29] Démarrage prédiction sur : temp_query
+[2026-02-09 08:50:31]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 08:50:31] Démarrage prédiction sur : temp_query
+[2026-02-09 08:51:33]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 08:57:45] Démarrage prédiction sur : temp_query
+[2026-02-09 08:58:48]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 08:58:48]    Données nettoyées. Shape: (1, 33)
+[2026-02-09 08:58:48] 1 prédictions générées.
+[2026-02-09 08:58:48] Démarrage prédiction sur : temp_query
+[2026-02-09 08:59:50]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 08:59:50]    Données nettoyées. Shape: (1, 33)
+[2026-02-09 08:59:50] 1 prédictions générées.
+[2026-02-09 08:59:50] Démarrage prédiction sur : temp_query
+[2026-02-09 09:00:53]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 09:00:53]    Données nettoyées. Shape: (1, 33)
+[2026-02-09 09:00:53] 1 prédictions générées.
+[2026-02-09 09:10:27] Démarrage prédiction sur : temp_query
+[2026-02-09 09:11:29]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 09:11:29]    Données nettoyées. Shape: (1, 33)
+[2026-02-09 09:11:29] 1 prédictions générées.
+[2026-02-09 09:11:29] Démarrage prédiction sur : temp_query
+[2026-02-09 09:12:31]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 09:12:31]    Données nettoyées. Shape: (1, 33)
+[2026-02-09 09:12:31] 1 prédictions générées.
+[2026-02-09 09:12:31] Démarrage prédiction sur : temp_query
+[2026-02-09 09:13:33]    Modèle chargé : RandomForestClassifier (multi-classification)
+[2026-02-09 09:13:33]    Données nettoyées. Shape: (1, 33)
+[2026-02-09 09:13:33] 1 prédictions générées.

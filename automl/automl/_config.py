@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 # Répertoires par défaut (peuvent être surchargés via variables d'environnement ou config)
-BASE_DIR = Path.cwd()
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 LOG_DIR = BASE_DIR / "automl/logs"
 CHECKPOINT_DIR = BASE_DIR / "automl/checkpoints"
 RESULTS_DIR = BASE_DIR / "automl/results"

@@ -1,196 +1,185 @@
-import joblib
+import time
+import os
+import sys
 import pandas as pd
 import numpy as np
 import json
-import time
-import os
-import re
+import joblib
 
-# ================= INITIALISATION =================
+sys.path.append("..")
 
-print("⏳ Initialisation du système (Chargement en RAM)...")
-t_load_start = time.time()
+# 1. IMPORT PACKAGE
+try:
+    import automl
+    print("✅ Package 'automl' importé.")
+except ImportError:
+    print("❌ ERREUR : Package 'automl' introuvable.")
+    exit(1)
 
-# ================= CONFIGURATION =================
+# =============================================================================
+# 1. INITIALISATION
+# =============================================================================
+print("⏳ Initialisation du Pipeline...")
+t_init = time.time()
 
-DATA_DIR      = "data/"
-GENERATED_DIR = "generated_files/pkl/"
+BASE_DIR = ""
+DATA_DIR      = BASE_DIR + "data/"
+GENERATED_DIR = BASE_DIR + "generated_files/pkl/"
 
-# Modèles et Données
-MODEL_CLASSIF = "automl/results/best_model.pkl" 
 MODEL_KNN     = GENERATED_DIR + "model_knn.pkl"
 VECT_KNN      = GENERATED_DIR + "vectorizer_knn.pkl"
 METADATA      = GENERATED_DIR + "wines_metadata.pkl"
 COLORS_FILE   = DATA_DIR      + "wine_colors.json"
-
-GROUPS_FILE   = GENERATED_DIR + "keyword_groups.pkl"  
-COLUMNS_FILE  = GENERATED_DIR + "keywords_list.pkl"   
+GROUPS_FILE   = GENERATED_DIR + "keyword_groups.pkl"
+COLUMNS_FILE  = GENERATED_DIR + "keywords_list.pkl"
 
 try:
-    # Chargement des IA
-    if os.path.exists(MODEL_CLASSIF):
-        clf_model = joblib.load(MODEL_CLASSIF)
-        print("   Modèle Classification (AutoML) chargé.")
-    else:
-        print(f"   Modèle Classification manquant : {MODEL_CLASSIF}")
-        clf_model = None
-
     if os.path.exists(MODEL_KNN):
         knn_model = joblib.load(MODEL_KNN)
         knn_vect  = joblib.load(VECT_KNN)
-        print("   Moteur de Recommandation (KNN) chargé.")
     else:
-        print(f"   ERREUR : Modèle KNN introuvable ({MODEL_KNN})")
-        exit(1)
-    
-    # Chargement des Données
+        knn_model = None
+
     if os.path.exists(METADATA):
         df_meta = pd.read_pickle(METADATA)
-        print(f"   Métadonnées chargées ({len(df_meta)} vins).")
     else:
-        # Fallback sur le CSV si le pickle n'existe pas
-        csv_path = DATA_DIR + "wines_db_full.csv"
-        print(f"   Pickle métadonnées absent, lecture CSV ({csv_path})...")
-        df_meta = pd.read_csv(csv_path, on_bad_lines='skip', low_memory=False)
-    
-    # Chargement de la "Carte Mentale" (Mapping Synonymes -> Features)
-    if os.path.exists(GROUPS_FILE) and os.path.exists(COLUMNS_FILE):
+        df_meta = pd.read_csv(DATA_DIR + "wines_db_full.csv", on_bad_lines='skip', low_memory=False)
+
+    if os.path.exists(GROUPS_FILE):
         KEYWORD_GROUPS = joblib.load(GROUPS_FILE)
         ORDERED_COLUMNS = joblib.load(COLUMNS_FILE)
-        print(f"   Dictionnaire de synonymes chargé : {len(KEYWORD_GROUPS)} méta-catégories.")
     else:
-        print("   ERREUR CRITIQUE : Fichiers de configuration manquants (keyword_groups.pkl).")
+        print("❌ ERREUR Config : Lancez 1_prepare.py")
         exit(1)
 
-    # Chargement Couleurs
     variety_map = {}
     if os.path.exists(COLORS_FILE):
         with open(COLORS_FILE, "r", encoding="utf-8") as f:
             variety_map = json.load(f)
-    
+
 except Exception as e:
-    print(f"\n ERREUR FATALE LORS DU CHARGEMENT.\n   Détail : {e}")
+    print(f"❌ Erreur Init : {e}")
     exit(1)
 
-print(f"Système prêt en {time.time() - t_load_start:.2f} secondes.\n")
+print(f"🚀 Système prêt en {time.time() - t_init:.2f} s.\n")
 
-
-
-def text_to_vector(user_text):
-    """
-    Transforme l'entrée utilisateur ("I want cherry") 
-    en vecteur compréhensible pour le modèle([1, 0, 0...]) 
-    en utilisant les groupes de synonymes.
-    """
-    if not user_text:
-        return np.zeros((1, len(ORDERED_COLUMNS)), dtype=int)
-
-    user_text = user_text.lower()
-    
-    # On crée un vecteur de zéros de la taille du nombre de colonnes d'entraînement
+# =============================================================================
+# 2. OUTILS
+# =============================================================================
+def text_to_dataframe(user_text):
     vector = np.zeros((1, len(ORDERED_COLUMNS)), dtype=int)
-    
-    # Pour chaque colonne connue de l'IA (ex: "red_fruit", "oak"...)
-    for i, col_name in enumerate(ORDERED_COLUMNS):
-        synonyms = KEYWORD_GROUPS.get(col_name, [])
-        
-        # On regarde si L'UN des synonymes est dans le texte
-        for word in synonyms:
-            # Recherche simple (plus robuste que regex complexe pour des tests rapides)
-            if word in user_text:
-                vector[0, i] = 1
-                break # Une seule occurrence suffit pour activer la feature
-                
-    return vector
+    if user_text:
+        user_text = user_text.lower()
+        for i, col_name in enumerate(ORDERED_COLUMNS):
+            synonyms = KEYWORD_GROUPS.get(col_name, [])
+            for word in synonyms:
+                if word in user_text:
+                    vector[0, i] = 1
+                    break 
+    return pd.DataFrame(vector, columns=ORDERED_COLUMNS)
 
-# ================= PREDICTION =================
+# =============================================================================
+# 3. PRÉDICTION (DOUBLE PASSE : STRICT -> FALLBACK)
+# =============================================================================
 def fast_predict(description, color_constraint=None):
     start = time.time()
     
-    # --- Classification (Type de vin probable) ---
-    cepage_estime = "Non Disponible"
-    if clf_model:
-        try:
-            # Traduction (User -> Vecteur IA via Synonymes)
-            vec_automl = text_to_vector(description)
-            
-            # Prédiction
-            pred = clf_model.predict(vec_automl)
-            cepage_estime = pred[0]
-        except Exception as e:
-            cepage_estime = f"Erreur Classif"
-            # print(e) # Décommenter pour debug
-
-    # --- Recommandation KNN (Recherche de bouteille) ---
-    # Le KNN utilise le vectorizer TF-IDF entraîné sur le texte brut
+    # --- A. DÉCISION AUTOML ---
+    cepage_decision = "Inconnu"
+    base_filename = "temp_query"      
+    real_filename = "temp_query.data" 
+    
     try:
-        vec_knn = knn_vect.transform([description])
-        distances, indices = knn_model.kneighbors(vec_knn, n_neighbors=50)
+        input_data = text_to_dataframe(description)
+        # Format .DATA (Espaces + Pas de header)
+        input_data.to_csv(real_filename, index=False, header=False, sep=" ")
         
-        best_bottle = None
-        status = "Aucun résultat"
+        prediction = automl.predict(base_filename)
         
-        for i in indices[0]:
-            candidat = df_meta.iloc[i]
-            variete = candidat['variety']
-            
-            # --- FILTRE COULEUR ---
-            couleur_reelle = variety_map.get(variete, "unknown")
-            
-            if color_constraint:
-                # Si on connait la couleur et qu'elle ne matche pas -> Skip
-                if couleur_reelle != "unknown" and couleur_reelle != color_constraint:
-                    continue
-            
-            best_bottle = candidat
-            status = "Optimal"
-            break
-        
-        # Fallback (si le filtre couleur a tout éliminé)
-        if best_bottle is None and len(indices[0]) > 0:
-            best_bottle = df_meta.iloc[indices[0][0]]
-            status = "Fallback (Couleur ignorée)"
+        if isinstance(prediction, (list, np.ndarray)):
+            cepage_decision = prediction[0] if len(prediction) > 0 else "Inconnu"
+        else:
+            cepage_decision = prediction
             
     except Exception as e:
-        best_bottle = None
-        status = f"Erreur KNN: {e}"
+        cepage_decision = f"Erreur: {e}"
+    finally:
+        if os.path.exists(real_filename):
+            try: os.remove(real_filename)
+            except: pass
+
+    # --- B. RECHERCHE KNN ---
+    best_bottle = None
+    strategy_used = "Aucune"
+    
+    if knn_model:
+        try:
+            vec_knn = knn_vect.transform([description])
+            distances, indices = knn_model.kneighbors(vec_knn, n_neighbors=100)
+            
+            # ---------------------------------------------------------
+            # PASSE 1 : MODE STRICT (On respecte l'AutoML)
+            # ---------------------------------------------------------
+            for i in indices[0]:
+                candidat = df_meta.iloc[i]
+                
+                # Vérif Couleur
+                variete = candidat['variety']
+                couleur_reelle = variety_map.get(variete, "unknown")
+                if color_constraint and couleur_reelle != "unknown" and couleur_reelle != color_constraint:
+                    continue
+                
+                # Vérif AutoML (C'est la condition stricte)
+                if candidat['variety'] == cepage_decision:
+                    best_bottle = candidat
+                    strategy_used = "✅ Accord AutoML"
+                    break
+            
+            # ---------------------------------------------------------
+            # PASSE 2 : MODE FALLBACK (Si Passe 1 a échoué)
+            # On ignore l'AutoML, on prend juste le meilleur match texte
+            # ---------------------------------------------------------
+            if best_bottle is None:
+                for i in indices[0]:
+                    candidat = df_meta.iloc[i]
+                    
+                    # On garde quand même le filtre couleur (c'est important pour l'utilisateur)
+                    variete = candidat['variety']
+                    couleur_reelle = variety_map.get(variete, "unknown")
+                    if color_constraint and couleur_reelle != "unknown" and couleur_reelle != color_constraint:
+                        continue
+                    
+                    best_bottle = candidat
+                    strategy_used = "⚠️ Fallback (AutoML ignoré)"
+                    break
+
+        except Exception as e:
+            strategy_used = f"Erreur KNN: {e}"
 
     duration = time.time() - start
-    return cepage_estime, best_bottle, duration, status
+    return cepage_decision, best_bottle, duration, strategy_used
 
-
-# ================= TEST =================
+# =============================================================================
+# 4. TESTS
+# =============================================================================
 tests = [
-    # Test 1 : Vocabulaire simple 
-    ("Poulet Classique", "chicken white citrus butter", "white"),
-    
-    # Test 2 : Utilisation des Synonymes 
-    ("Barbecue Expert", "steak grilled ash cigar pepper", "red"),
-    
-    # Test 3 : Fruits précis 
-    ("Bordeaux Style", "beef cassis cedar structured", "red"),
-    
-    # Test 4 : Dessert 
-    ("Dessert Noix", "cake marzipan honey sweet", "white"),
+    ("Poulet (White)", "chicken white citrus butter", "white"),
+    ("Steak (Red)", "steak grilled pepper smoke", "red"),
+    ("Dessert (Piege)", "cake marzipan honey", "white"), # Cas où l'AutoML peut se tromper
 ]
 
-print("=== DÉBUT DES TESTS ===")
-print(f"{'TEST':<20} | {'TEMPS':<8} | {'CLASSIF (IA)':<25} | {'RECO (KNN)'}")
-print("-" * 110)
-
-total_time = 0
+print("=== DÉBUT DES TESTS AVEC FALLBACK ===")
+print(f"{'TEST':<15} | {'DÉCISION IA':<20} | {'STRATÉGIE':<25} | {'RÉSULTAT'}")
+print("-" * 100)
 
 for nom, desc, color in tests:
-    cepage, bouteille, duree, st = fast_predict(desc, color)
-    total_time += duree
-    
-    if bouteille is not None:
-        nom_bouteille = str(bouteille['title'])[:40] + "..."
-    else:
-        nom_bouteille = "Aucune suggestion"
-        
-    print(f"{nom:<20} | {duree:.4f}s  | {str(cepage):<25} | {nom_bouteille}")
+    decision, bouteille, duree, strategie = fast_predict(desc, color)
 
-avg = total_time / len(tests)
-print("-" * 110)
-print(f"⚡ Moyenne : {avg:.4f} s/req")
+    if bouteille is not None:
+        res = f"{bouteille['title'][:30]}..."
+    else:
+        res = "Aucun résultat"
+
+    print(f"{nom:<15} | {str(decision)[:20]:<20} | {strategie:<25} | {res}")
+
+print("-" * 100)

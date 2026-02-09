@@ -32,3 +32,15 @@
 [2026-02-06 15:23:17] Pipeline sauvegardé : /info/etu/m1/s2203089/API/automl/results/best_model.pkl
 [2026-02-06 15:23:17] Résultats: /info/etu/m1/s2203089/API/automl/results/results_stable.pkl
 [2026-02-06 15:23:17] Meilleur: RandomForestClassifier (score=0.3072)
+[2026-02-08 19:35:26] AutoML fit: generated_files/automl/wine_train (mode=stable)
+[2026-02-08 19:35:26] Chargement des données complètes...
+[2026-02-08 19:35:28] Dataset: 150930 lignes. Features: 33, Targets: 1
+[2026-02-08 19:35:28] Type détecté: multi-classification
+[2026-02-08 19:35:28] Nettoyage complet...
+[2026-02-08 19:35:30] Shape après clean: (150930, 33)
+[2026-02-08 19:35:30] Optimisation modèle (multi-classification)...
+[2026-02-08 23:50:06] Gagnant: RandomForestClassifier (0.3098)
+[2026-02-08 23:50:06] Ré-entraînement final...
+[2026-02-08 23:58:06] Pipeline sauvegardé : /info/etu/m1/s2203089/API/automl/results/best_model.pkl
+[2026-02-08 23:58:06] Résultats: /info/etu/m1/s2203089/API/automl/results/results_stable.pkl
+[2026-02-08 23:58:06] Meilleur: RandomForestClassifier (score=0.3098)
