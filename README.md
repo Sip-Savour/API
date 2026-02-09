@@ -51,9 +51,9 @@ Lancement de l'api sur le port 8000
 
 ## 📁 Format des données
 
-| No  | country                           | description                                          | designation                                                                 | points                                                  | price                             | province                                    | region_1                                     | region_2                                                                       | variety                                  |
-| --- | --------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------- | --------------------------------- | ------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------- |
-|     | The country that the wine is from | A few sentences from a sommelier describing the wine | The vineyard within the winery where the grapes that made the wine are from | The number of points rated the wine on a scale of 1-100 | The cost for a bottle of the wine | The province or state that the wine is from | The wine growing area in a province or state | Sometimes there are more specific regions specified within a wine growing area | The type of grapes used to make the wine |
+| No                                | country                           | description                                          | designation                                                                 | points                                                  | price                             | province                                    | region_1                                     | region_2                                                                       | variety                                  |
+| --------------------------------- | --------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------- | --------------------------------- | ------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------- |
+| Number of the wine in the dataset | The country that the wine is from | A few sentences from a sommelier describing the wine | The vineyard within the winery where the grapes that made the wine are from | The number of points rated the wine on a scale of 1-100 | The cost for a bottle of the wine | The province or state that the wine is from | The wine growing area in a province or state | Sometimes there are more specific regions specified within a wine growing area | The type of grapes used to make the wine |
 
 ## 📂 Structure du projet
 
@@ -141,7 +141,3 @@ MIT License - voir [LICENSE](LICENSE) pour plus de détails.
 ## 🙏 Remerciements
 
 - [wine-dataset](https://www.kaggle.com/datasets/zynicide/wine-reviews/data?select=winemag-data_first150k.csv)
-
-```
-
-```
