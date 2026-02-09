@@ -1,124 +1,147 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import joblib
 import pandas as pd
 import numpy as np
 import os
-import json
+import sys
+
+# Ajout du chemin pour trouver predict.py et database.py
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from predict import fast_predict
+from database import SessionLocal, User, init_db
+from passlib.context import CryptContext
+from sqlalchemy.exc import IntegrityError
 
 # ================= CONFIGURATION =================
-app = FastAPI(title="Sommelier IA API", description="API de recommandation de vin pour Android")
+app = FastAPI(
+    title="Sommelier IA API", 
+    description="API de recommandation de vin (AutoML + KNN) & Gestion Utilisateurs",
+    version="1.0"
+)
 
-BASE_DIR = "../" 
+# Sécurité (Hashage mots de passe)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-GENERATED_DIR = BASE_DIR + "generated_files/pkl/"
-DATA_DIR      = BASE_DIR + "data/"
+def get_password_hash(password):
+    return pwd_context.hash(password)
 
-MODEL_CLASSIF = BASE_DIR + "automl/results/best_model.pkl"
-MODEL_KNN     = GENERATED_DIR + "model_knn.pkl"
-VECT_KNN      = GENERATED_DIR + "vectorizer_knn.pkl"
-METADATA      = GENERATED_DIR + "wines_metadata.pkl"
-GROUPS_FILE   = GENERATED_DIR + "keyword_groups.pkl"
-COLUMNS_FILE  = GENERATED_DIR + "keywords_list.pkl"
-COLORS_FILE   = DATA_DIR      + "wine_colors.json"
+# Initialisation de la DB au démarrage
+@app.on_event("startup")
+def startup_event():
+    print("🚀 Démarrage de l'API...")
+    init_db() # Crée les tables si elles n'existent pas
 
-ai_resources = {}
+# ================= MODÈLES DE DONNÉES (Pydantic) =================
 
-# ================= MODÈLES DE DONNÉES (JSON) =================
-# Ce que l'Android envoie
+# --- Partie VINS ---
 class WineRequest(BaseModel):
-    features: str        # Ex: "body_full tannins pepper"
-    color: str = None    # Ex: "red","white","rose" ou null
+    features: str        # Ex: "steak pepper"
+    color: str = None    # Ex: "red" (Optionnel)
 
-# Ce que l'Android reçoit
 class BottleInfo(BaseModel):
     title: str
     description: str
-    price: float
+    price: float = 0.0
     variety: str
+    # Champs optionnels pour affichage complet
+    winery: str = None
+    country: str = None
+    province: str = None
+    points: int = None
 
 class WineResponse(BaseModel):
     cepage: str
-    bottle: BottleInfo
+    bottle: BottleInfo | None # Peut être null si aucun résultat
 
-# ================= CHARGEMENT AU DÉMARRAGE =================
-@app.on_event("startup")
-def load_resources():
-    print("Chargement des cerveaux de l'IA...")
-    try:
-        #Chargement Classification 
-        if os.path.exists(MODEL_CLASSIF):
-            ai_resources['clf'] = joblib.load(MODEL_CLASSIF)
-        else:
-            ai_resources['clf'] = None
-            print("⚠️ Modèle Classification absent (Mode Recommandation seule).")
+# --- Partie UTILISATEURS (Inscription) ---
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
 
-        # Chargement KNN 
-        ai_resources['knn'] = joblib.load(MODEL_KNN)
-        ai_resources['vect'] = joblib.load(VECT_KNN)
-        
-        # Données & Métadonnées
-        if os.path.exists(METADATA):
-            ai_resources['meta'] = pd.read_pickle(METADATA)
-        else:
-            # Fallback CSV
-            ai_resources['meta'] = pd.read_csv(DATA_DIR + "wines_db_full.csv", on_bad_lines='skip', low_memory=False)
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: str
 
-        # Synonymes & Couleurs
-        ai_resources['groups'] = joblib.load(GROUPS_FILE)
-        ai_resources['cols'] = joblib.load(COLUMNS_FILE)
-        
-        with open(COLORS_FILE, "r", encoding="utf-8") as f:
-            ai_resources['colors'] = json.load(f)
-
-        print("✅ API Prête à servir !")
-        
-    except Exception as e:
-        print(f"❌ ERREUR CRITIQUE au démarrage : {e}")
-
-# ================= LOGIQUE MÉTIER (Interne) =================
-def text_to_vector(user_text):
-    """Traduit le texte en vecteur 0/1 selon les synonymes"""
-    columns = ai_resources['cols']
-    groups = ai_resources['groups']
-    
-    vector = np.zeros((1, len(columns)), dtype=int)
-    user_text = user_text.lower()
-    
-    for i, col_name in enumerate(columns):
-        synonyms = groups.get(col_name, [])
-        for word in synonyms:
-            if word in user_text:
-                vector[0, i] = 1
-                break
-    return vector
-
-# ================= ENDPOINTS (Routes) =================
+# ================= ROUTES (Endpoints) =================
 
 @app.get("/")
 def home():
-    return {"status": "online", "message": "Le Sommelier est réveillé. Utilisez /predict"}
+    return {"status": "online", "message": "API Sommelier opérationnelle."}
 
+# --- Route 1 : Prédiction (IA) ---
 @app.post("/predict", response_model=WineResponse)
 def predict_wine(req: WineRequest):
     """
-    Reçoit : { "features": "beef pepper", "color": "red" }
-    Retourne : Le meilleur vin trouvé.
+    Reçoit une description et une couleur.
+    Retourne le cépage estimé et la meilleure bouteille.
     """
-    if 'knn' not in ai_resources:
-        raise HTTPException(status_code=500, detail="L'IA n'est pas chargée.")
+    try:
+        # Appel à predict.py (qui renvoie maintenant 2 valeurs)
+        cepage_estime, bouteille_trouvee = fast_predict(req.features, req.color)
 
-    description = req.features
-    color_constraint = req.color
-    bouteille= fast_predict(description, color_constraint)
+        if bouteille_trouvee is None:
+            # On renvoie quand même une réponse valide (mais vide) pour ne pas crasher l'app Android
+            return WineResponse(cepage=str(cepage_estime), bottle=None)
 
-        # Construction de la réponse propre
-    return {
-        "bottle": {
-            "title": str(bouteille['title']),
-            "description": str(bouteille['description']), 
-            "variety": str(bouteille['variety'])
-        }
-    }
+        # Gestion des valeurs nulles (NaN) qui font planter JSON
+        def clean_val(val, default):
+            return default if pd.isna(val) else val
 
+        info_bouteille = BottleInfo(
+            title=str(bouteille_trouvee['title']),
+            description=str(bouteille_trouvee['description']),
+            price=clean_val(bouteille_trouvee['price'], 0.0),
+            variety=str(bouteille_trouvee['variety']),
+            winery=clean_val(bouteille_trouvee.get('winery'), "Inconnu"),
+            country=clean_val(bouteille_trouvee.get('country'), "Inconnu"),
+            province=clean_val(bouteille_trouvee.get('province'), "Inconnu"),
+            points=clean_val(bouteille_trouvee.get('points'), 0)
+        )
+
+        return WineResponse(
+            cepage=str(cepage_estime),
+            bottle=info_bouteille
+        )
+
+    except Exception as e:
+        print(f"❌ Erreur API Predict : {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# --- Route 2 : Inscription (SQL) ---
+@app.post("/signup", response_model=UserResponse)
+def create_user(user: UserCreate):
+    db = SessionLocal()
+    try:
+        # 1. Vérif email
+        existing_user = db.query(User).filter(User.email == user.email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email déjà utilisé.")
+        
+        # 2. Vérif username
+        existing_username = db.query(User).filter(User.username == user.username).first()
+        if existing_username:
+            raise HTTPException(status_code=400, detail="Nom d'utilisateur déjà pris.")
+
+        # 3. Création
+        new_user = User(
+            username=user.username,
+            email=user.email,
+            password_hash=get_password_hash(user.password)
+        )
+        
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        
+        return new_user
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Erreur inscription : {str(e)}")
+    finally:
+        db.close()

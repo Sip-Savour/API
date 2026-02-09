@@ -20,13 +20,13 @@ print(f"{'TEST':<15} | {'DÉCISION IA':<20} | {'STRATÉGIE':<25} | {'RÉSULTAT'}
 print("-" * 100)
 
 for nom, desc, color in tests:
-    decision, bouteille, duree, strategie = fast_predict(desc, color)
+    bouteille = fast_predict(desc, color)
 
     if bouteille is not None:
         res = f"{bouteille['title'][:30]}..."
     else:
         res = "Aucun résultat"
 
-    print(f"{nom:<15} | {str(decision)[:20]:<20} | {strategie:<25} | {res}")
+    print(f"{nom:<15} | {res}")
 
 print("-" * 100)

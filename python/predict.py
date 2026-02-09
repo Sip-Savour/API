@@ -6,24 +6,21 @@ import numpy as np
 import json
 import joblib
 
+# On remonte d'un niveau pour trouver le package automl
 sys.path.append("..")
 
 try:
     import automl
-    print("Package 'automl' importé.")
+    print("✅ Package 'automl' importé.")
 except ImportError:
-    print("ERREUR : Package 'automl' introuvable.")
-    exit(1)
+    print("❌ ERREUR : Package 'automl' introuvable.")
+    # On ne quitte pas brutalement pour ne pas tuer l'API, mais ça va planter plus loin
 
 # ================= CONFIGURATION =================
-t_init = time.time()
-
 BASE_DIR = "../" 
-
 GENERATED_DIR = BASE_DIR + "generated_files/pkl/"
 DATA_DIR      = BASE_DIR + "data/"
 
-MODEL_CLASSIF = BASE_DIR + "automl/results/best_model.pkl"
 MODEL_KNN     = GENERATED_DIR + "model_knn.pkl"
 VECT_KNN      = GENERATED_DIR + "vectorizer_knn.pkl"
 METADATA      = GENERATED_DIR + "wines_metadata.pkl"
@@ -31,33 +28,37 @@ GROUPS_FILE   = GENERATED_DIR + "keyword_groups.pkl"
 COLUMNS_FILE  = GENERATED_DIR + "keywords_list.pkl"
 COLORS_FILE   = DATA_DIR      + "wine_colors.json"
 
+# Chargement unique au démarrage (Global)
+knn_model = None
+knn_vect = None
+df_meta = None
+KEYWORD_GROUPS = {}
+ORDERED_COLUMNS = []
+variety_map = {}
+
 try:
     if os.path.exists(MODEL_KNN):
         knn_model = joblib.load(MODEL_KNN)
         knn_vect  = joblib.load(VECT_KNN)
-    else:
-        knn_model = None
-
+    
     if os.path.exists(METADATA):
         df_meta = pd.read_pickle(METADATA)
     else:
+        # Fallback CSV si pickle absent
         df_meta = pd.read_csv(DATA_DIR + "wines_db_full.csv", on_bad_lines='skip', low_memory=False)
 
     if os.path.exists(GROUPS_FILE):
         KEYWORD_GROUPS = joblib.load(GROUPS_FILE)
         ORDERED_COLUMNS = joblib.load(COLUMNS_FILE)
-    else:
-        print("ERREUR Config : Lancez 1_prepare.py")
-        exit(1)
 
-    variety_map = {}
     if os.path.exists(COLORS_FILE):
         with open(COLORS_FILE, "r", encoding="utf-8") as f:
             variety_map = json.load(f)
 
+    print("✅ Moteur de prédiction chargé.")
+
 except Exception as e:
-    print(f"Erreur Init : {e}")
-    exit(1)
+    print(f"⚠️ Erreur chargement ressources : {e}")
 
 
 # ================= OUTILS =================
@@ -73,18 +74,21 @@ def text_to_dataframe(user_text):
                     break 
     return pd.DataFrame(vector, columns=ORDERED_COLUMNS)
 
-# ================= PREDICTION =================
+# ================= PRÉDICTION =================
 def fast_predict(description, color_constraint=None):
     start = time.time()
     
+    # --- 1. AUTOML ---
     cepage_decision = "Inconnu"
     base_filename = "temp_query"      
     real_filename = "temp_query.data" 
     
     try:
         input_data = text_to_dataframe(description)
+        # Format .DATA (Espaces + Pas de header)
         input_data.to_csv(real_filename, index=False, header=False, sep=" ")
         
+        # Appel AutoML
         prediction = automl.predict(base_filename)
         
         if isinstance(prediction, (list, np.ndarray)):
@@ -93,49 +97,48 @@ def fast_predict(description, color_constraint=None):
             cepage_decision = prediction
             
     except Exception as e:
-        cepage_decision = f"Erreur: {e}"
+        print(f"Erreur AutoML: {e}")
+        cepage_decision = "Erreur"
     finally:
         if os.path.exists(real_filename):
             try: os.remove(real_filename)
             except: pass
 
+    # --- 2. KNN ---
     best_bottle = None
-    strategy_used = "Aucune"
     
     if knn_model:
         try:
             vec_knn = knn_vect.transform([description])
             distances, indices = knn_model.kneighbors(vec_knn, n_neighbors=100)
             
-            for i in indices[0]:
-                candidat = df_meta.iloc[i]
-                
-                # Vérif Couleur
-                variete = candidat['variety']
-                couleur_reelle = variety_map.get(variete, "unknown")
-                if color_constraint and couleur_reelle != "unknown" and couleur_reelle != color_constraint:
-                    continue
-                
-                if candidat['variety'] == cepage_decision:
-                    best_bottle = candidat
-                    strategy_used = "Accord AutoML"
-                    break
-            
-            if best_bottle is None:
+            # Passe 1 : Strict (Respect AutoML)
+            if cepage_decision not in ["Inconnu", "Erreur"]:
                 for i in indices[0]:
                     candidat = df_meta.iloc[i]
                     
-                    variete = candidat['variety']
-                    couleur_reelle = variety_map.get(variete, "unknown")
-                    if color_constraint and couleur_reelle != "unknown" and couleur_reelle != color_constraint:
+                    # Filtre Couleur
+                    col = variety_map.get(candidat['variety'], "unknown")
+                    if color_constraint and col != "unknown" and col != color_constraint:
                         continue
                     
+                    # Filtre Cépage
+                    if candidat['variety'] == cepage_decision:
+                        best_bottle = candidat
+                        break
+            
+            # Passe 2 : Fallback (Si rien trouvé ou erreur AutoML)
+            if best_bottle is None:
+                for i in indices[0]:
+                    candidat = df_meta.iloc[i]
+                    col = variety_map.get(candidat['variety'], "unknown")
+                    if color_constraint and col != "unknown" and col != color_constraint:
+                        continue
                     best_bottle = candidat
-                    strategy_used = "Fallback (AutoML ignoré)"
                     break
 
         except Exception as e:
-            strategy_used = f"Erreur KNN: {e}"
+            print(f"Erreur KNN: {e}")
 
-    duration = time.time() - start
-    return best_bottle
+    # IMPORTANT : On renvoie DEUX valeurs !
+    return cepage_decision, best_bottle
