@@ -135,4 +135,4 @@ def fast_predict(description, color_constraint=None):
             strategy_used = f"Erreur KNN: {e}"
 
     duration = time.time() - start
-    return cepage_decision, best_bottle, duration, strategy_used
+    return best_bottle

@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import os
 import json
+from predict import fast_predict
 
 # ================= CONFIGURATION =================
 app = FastAPI(title="Sommelier IA API", description="API de recommandation de vin pour Android")
@@ -110,54 +111,14 @@ def predict_wine(req: WineRequest):
 
     description = req.features
     color_constraint = req.color
-    
-    # --- CLASSIFICATION ---
-    cepage_estime = "Inconnu"
-    if ai_resources['clf']:
-        try:
-            vec = text_to_vector(description)
-            cepage_estime = ai_resources['clf'].predict(vec)[0]
-        except:
-            pass 
-    # --- RECOMMANDATION (KNN) ---
-    try:
-        # Vectorisation TF-IDF
-        vec_knn = ai_resources['vect'].transform([description])
-        # Recherche des 50 plus proches
-        distances, indices = ai_resources['knn'].kneighbors(vec_knn, n_neighbors=50)
-        
-        df = ai_resources['meta']
-        variety_map = ai_resources['colors']
-        
-        best_bottle = None
-        
-        # Filtrage par couleur
-        for i in indices[0]:
-            candidate = df.iloc[i]
-            variety = candidate['variety']
-            wine_color = variety_map.get(variety, "unknown")
-            
-            if color_constraint:
-                if wine_color != "unknown" and wine_color != color_constraint:
-                    continue # On saute si la couleur ne matche pas
-            
-            best_bottle = candidate
-            break
-        
-        # Fallback (Si aucun vin de la bonne couleur n'est trouvé dans le top 50)
-        if best_bottle is None:
-            best_bottle = df.iloc[indices[0][0]] # On prend le plus proche mathématiquement
-            cepage_estime += " (Couleur non garantie)"
+    bouteille= fast_predict(description, color_constraint)
 
         # Construction de la réponse propre
-        return {
-            "cepage": str(cepage_estime),
-            "bottle": {
-                "title": str(best_bottle['title']),
-                "description": str(best_bottle['description']), 
-                "variety": str(best_bottle['variety'])
-            }
+    return {
+        "bottle": {
+            "title": str(bouteille['title']),
+            "description": str(bouteille['description']), 
+            "variety": str(bouteille['variety'])
         }
+    }
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur algorithmique : {str(e)}")
