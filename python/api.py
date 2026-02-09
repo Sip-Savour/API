@@ -42,16 +42,10 @@ class WineRequest(BaseModel):
 class BottleInfo(BaseModel):
     title: str
     description: str
-    price: float = 0.0
     variety: str
-    # Champs optionnels pour affichage complet
-    winery: str = None
-    country: str = None
-    province: str = None
-    points: int = None
+    
 
 class WineResponse(BaseModel):
-    cepage: str
     bottle: BottleInfo | None # Peut être null si aucun résultat
 
 # --- Partie UTILISATEURS (Inscription) ---
@@ -100,7 +94,6 @@ def predict_wine(req: WineRequest):
         )
 
         return WineResponse(
-            cepage=str(cepage_estime),
             bottle=info_bouteille
         )
 
