@@ -1,7 +1,0 @@
-[2026-02-05 17:57:28] Type sklearn détecté: multiclass
-<<<<<<< Updated upstream
-=======
-[2026-02-05 21:14:39] Type sklearn détecté: multiclass
->>>>>>> Stashed changes
-[2026-02-06 09:46:13] Type sklearn détecté: multiclass
-[2026-02-08 19:35:28] Type sklearn détecté: multiclass

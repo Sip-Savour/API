@@ -94,15 +94,13 @@ def prepare():
     
     descriptions = df['description'].str.lower()
     
-    # On prépare les noms des colonnes finales
+    # Preparation des méta-colonnes colonnes finales
     final_columns = list(KEYWORD_GROUPS.keys())
     
     # Matrice de résultat
     X_matrix = np.zeros((len(df), len(final_columns)), dtype=int)
     
     for i, (col_name, synonyms) in enumerate(KEYWORD_GROUPS.items()):
-        # ASTUCE : Regex 'OR' (\b = mot entier uniquement)
-        # Exemple : "\bacid\b|\bacidity\b|\btart\b"
         pattern = '|'.join([f"\\b{word}\\b" for word in synonyms])
         
         # Détection vectorisée
@@ -118,7 +116,7 @@ def prepare():
     # SAUVEGARDE DES MOTS CLES
     joblib.dump(final_columns, GENERATED_PKL_DIR + "keywords_list.pkl")
 
-    # SAUVEGARDE DU DICTIONNAIRE COMPLET (POUR L'API) - TRES IMPORTANT
+    # SAUVEGARDE DU DICTIONNAIRE COMPLET (POUR L'API)
     joblib.dump(KEYWORD_GROUPS, GENERATED_PKL_DIR + "keyword_groups.pkl")
     print(f"   > Mappage complet sauvegardé : keyword_groups.pkl")
 

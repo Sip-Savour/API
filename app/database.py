@@ -28,11 +28,6 @@ class Wine(Base):
     title = Column(String, index=True)
     description = Column(Text)
     variety = Column(String, index=True)
-    
-    # Infos détaillées
-    winery = Column(String, nullable=True)
-    province = Column(String, nullable=True)
-    country = Column(String, nullable=True)
 
     favorited_by = relationship("Favorite", back_populates="wine")
 

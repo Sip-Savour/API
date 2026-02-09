@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=5_api
-#SBATCH --output=automl_output.log
-#SBATCH --error=automl_error.log
+#SBATCH --output=logs/api_output.log
+#SBATCH --error=logs/api_error.log
 #SBATCH --time=48:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
@@ -13,7 +13,7 @@
 # 1. NAVIGATION VERS LE CODE (Chemin Absolu)
 # =========================================================
 # On force le script à aller là où est api.py
-cd /info/etu/m1/s2203089/API/python
+cd /info/etu/m1/s2203089/API/app
 
 echo "📍 Dossier de travail actuel : $(pwd)"
 

@@ -106,13 +106,12 @@ curl -X POST "http://127.0.0.1:8000/predict" \
 ## 🧪 Exemple de résultats
 
 ```
-{
-  "cepage": "Syrah",
-  "bottle": {
-    "title": "Domaine X Syrah 2015",
-    "description": "A peppery and smoky wine...",
-    "variety": "Syrah"
-  }
+{"bottle":
+    {
+        "title":"Mulderbosch Shiraz",
+        "description":"Dark berry jam and smoke on the nose are followed by flavors of berry, smoke and pepper on the palate here. An assertive minerality ties it all together and offers balance and refinement. Overall, a stylish, classic Shiraz with food pairing potential written all over it. Think grilled steak or lamb.",
+        "variety":"Shiraz"
+    }
 }
 ```
 

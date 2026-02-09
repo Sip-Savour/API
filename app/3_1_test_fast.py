@@ -15,7 +15,7 @@ tests = [
     ("Dessert (Piege)", "cake marzipan honey", "white"), 
 ]
 
-print("=== DÉBUT DES TESTS AVEC FALLBACK ===")
+print("=== DÉBUT DES TESTS ===")
 print(f"{'TEST':<15} | {'DÉCISION IA':<20} | {'STRATÉGIE':<25} | {'RÉSULTAT'}")
 print("-" * 100)
 

@@ -29,7 +29,7 @@ def get_password_hash(password):
 # Initialisation de la DB au démarrage
 @app.on_event("startup")
 def startup_event():
-    print("🚀 Démarrage de l'API...")
+    print("Démarrage de l'API...")
     init_db() # Crée les tables si elles n'existent pas
 
 # ================= MODÈLES DE DONNÉES (Pydantic) =================
@@ -63,7 +63,7 @@ class UserResponse(BaseModel):
 
 @app.get("/")
 def home():
-    return {"status": "online", "message": "API Sommelier opérationnelle."}
+    return {"status": "online", "message": "API opérationnelle."}
 
 @app.post("/predict", response_model=WineResponse)
 def predict_wine(req: WineRequest):
@@ -72,24 +72,15 @@ def predict_wine(req: WineRequest):
     Retourne le cépage estimé et la meilleure bouteille.
     """
     try:
-        # Appel à predict.py
         cepage_estime, bouteille_trouvee = fast_predict(req.features, req.color)
 
         if bouteille_trouvee is None:
-            return WineResponse(cepage=str(cepage_estime), bottle=None)
-
-        # --- CORRECTION DE SÉCURITÉ ICI ---
-        # On utilise .get() pour éviter le crash "KeyError: 'price'"
-        # Si la colonne n'existe pas, on met une valeur par défaut.
-        
-        def safe_get(key, default):
-            val = bouteille_trouvee.get(key, default)
-            return default if pd.isna(val) else val
+            return WineResponse(bottle=None)
 
         info_bouteille = BottleInfo(
-            title=str(safe_get('title', "Titre Inconnu")),
-            description=str(safe_get('description', "Pas de description")),
-            variety=str(safe_get('variety', "Inconnu")),
+            title=str(bouteille_trouvee.get('title')),
+            description=str(bouteille_trouvee.get('description')),
+            variety=str(bouteille_trouvee.get('variety')),
             
         )
 
@@ -98,8 +89,7 @@ def predict_wine(req: WineRequest):
         )
 
     except Exception as e:
-        print(f"❌ Erreur API Predict : {e}")
-        # On renvoie l'erreur détaillée pour comprendre
+        print(f"Erreur API Predict : {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # --- Route 2 : Inscription (SQL) ---
