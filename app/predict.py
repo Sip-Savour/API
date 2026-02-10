@@ -73,7 +73,7 @@ def text_to_dataframe(user_text):
     return pd.DataFrame(vector, columns=ORDERED_COLUMNS)
 
 # ================= PRÉDICTION =================
-def fast_predict(description, color_constraint=None):
+def fast_predict(description, color_constraint=None, top_n=5):
     start = time.time()
     
     # --- 1. AUTOML ---
@@ -100,41 +100,46 @@ def fast_predict(description, color_constraint=None):
             try: os.remove(real_filename)
             except: pass
 
-    # --- 2. KNN ---
-    best_bottle = None
+    # --- 2. KNN (Récupération de 5 bouteilles) ---
+    best_bottles = [] 
+    seen_titles = set() 
     
     if knn_model:
         try:
             vec_knn = knn_vect.transform([description])
             distances, indices = knn_model.kneighbors(vec_knn, n_neighbors=100)
             
-            # Si resultat automl
             if cepage_decision not in ["Inconnu", "Erreur"]:
                 for i in indices[0]:
-                    candidat = df_meta.iloc[i]
+                    if len(best_bottles) >= top_n: break
                     
-                    # Filtre Couleur
+                    candidat = df_meta.iloc[i]
+                    if candidat['title'] in seen_titles: continue
+                    
                     col = variety_map.get(candidat['variety'], "unknown")
                     if color_constraint and col != "unknown" and col != color_constraint:
                         continue
+                    if candidat['variety'] != cepage_decision:
+                        continue
                     
-                    # Filtre Cépage
-                    if candidat['variety'] == cepage_decision:
-                        best_bottle = candidat
-                        break
+                    best_bottles.append(candidat)
+                    seen_titles.add(candidat['title'])
             
-            # sinon ignore automl
-            if best_bottle is None:
+            if len(best_bottles) < top_n:
                 for i in indices[0]:
+                    if len(best_bottles) >= top_n: break
+
                     candidat = df_meta.iloc[i]
+                    if candidat['title'] in seen_titles: continue
+
                     col = variety_map.get(candidat['variety'], "unknown")
                     if color_constraint and col != "unknown" and col != color_constraint:
                         continue
-                    best_bottle = candidat
-                    break
+                    
+                    best_bottles.append(candidat)
+                    seen_titles.add(candidat['title'])
 
         except Exception as e:
             print(f"Erreur KNN: {e}")
 
-    # IMPORTANT : On renvoie DEUX valeurs !
-    return best_bottle
+    return best_bottles

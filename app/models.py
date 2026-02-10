@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import List, Optional 
 
 # --- VINS ---
 class WineRequest(BaseModel):
@@ -11,7 +12,7 @@ class BottleInfo(BaseModel):
     variety: str
 
 class WineResponse(BaseModel):
-    bottle: BottleInfo | None
+    bottle: List[BottleInfo] | None
 
 # --- UTILISATEURS ---
 class UserCreate(BaseModel):

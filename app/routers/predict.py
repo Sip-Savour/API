@@ -10,21 +10,22 @@ router = APIRouter()
 @router.post("/predict", response_model=WineResponse, tags=["AI"])
 def predict_wine(req: WineRequest):
     try:
-        bouteille_trouvee = fast_predict(req.features, req.color)
+        bouteilles_trouvees = fast_predict(req.features, req.color, top_n=5)
 
-        if bouteille_trouvee is None:
-            return WineResponse(bottle=None)
-
-        info_bouteille = BottleInfo(
-            title=str(bouteille_trouvee.get('title', 'Inconnu')),
-            description=str(bouteille_trouvee.get('description', '')),
-            variety=str(bouteille_trouvee.get('variety', 'Inconnu')),
-        )
+        results = []
+        if bouteilles_trouvees:
+            for b in bouteilles_trouvees:
+                info = BottleInfo(
+                    title=str(b.get('title', 'Inconnu')),
+                    description=str(b.get('description', '')),
+                    variety=str(b.get('variety', 'Inconnu')),
+                    price=float(b.get('price', 0.0)) if b.get('price') == b.get('price') else 0.0
+                )
+                results.append(info)
 
         return WineResponse(
-            bottle=info_bouteille
+            bottles=results 
         )
-
     except Exception as e:
         print(f"Erreur API : {e}")
         raise HTTPException(status_code=500, detail=str(e))
