@@ -11,10 +11,9 @@ sys.path.append("..")
 
 try:
     import automl
-    print("✅ Package 'automl' importé.")
+    print("Package 'automl' importé.")
 except ImportError:
-    print("❌ ERREUR : Package 'automl' introuvable.")
-    # On ne quitte pas brutalement pour ne pas tuer l'API, mais ça va planter plus loin
+    print("ERREUR : Package 'automl' introuvable.")
 
 # ================= CONFIGURATION =================
 BASE_DIR = "../" 
@@ -44,7 +43,6 @@ try:
     if os.path.exists(METADATA):
         df_meta = pd.read_pickle(METADATA)
     else:
-        # Fallback CSV si pickle absent
         df_meta = pd.read_csv(DATA_DIR + "wines_db_full.csv", on_bad_lines='skip', low_memory=False)
 
     if os.path.exists(GROUPS_FILE):
@@ -55,10 +53,10 @@ try:
         with open(COLORS_FILE, "r", encoding="utf-8") as f:
             variety_map = json.load(f)
 
-    print("✅ Moteur de prédiction chargé.")
+    print("Moteur de prédiction chargé.")
 
 except Exception as e:
-    print(f"⚠️ Erreur chargement ressources : {e}")
+    print(f"Erreur chargement ressources : {e}")
 
 
 # ================= OUTILS =================
@@ -85,10 +83,8 @@ def fast_predict(description, color_constraint=None):
     
     try:
         input_data = text_to_dataframe(description)
-        # Format .DATA (Espaces + Pas de header)
         input_data.to_csv(real_filename, index=False, header=False, sep=" ")
         
-        # Appel AutoML
         prediction = automl.predict(base_filename)
         
         if isinstance(prediction, (list, np.ndarray)):
@@ -112,7 +108,7 @@ def fast_predict(description, color_constraint=None):
             vec_knn = knn_vect.transform([description])
             distances, indices = knn_model.kneighbors(vec_knn, n_neighbors=100)
             
-            # Passe 1 : Strict (Respect AutoML)
+            # Si resultat automl
             if cepage_decision not in ["Inconnu", "Erreur"]:
                 for i in indices[0]:
                     candidat = df_meta.iloc[i]
@@ -127,7 +123,7 @@ def fast_predict(description, color_constraint=None):
                         best_bottle = candidat
                         break
             
-            # Passe 2 : Fallback (Si rien trouvé ou erreur AutoML)
+            # sinon ignore automl
             if best_bottle is None:
                 for i in indices[0]:
                     candidat = df_meta.iloc[i]
@@ -141,4 +137,4 @@ def fast_predict(description, color_constraint=None):
             print(f"Erreur KNN: {e}")
 
     # IMPORTANT : On renvoie DEUX valeurs !
-    return cepage_decision, best_bottle
+    return best_bottle

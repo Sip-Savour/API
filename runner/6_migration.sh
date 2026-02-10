@@ -12,5 +12,5 @@
 
 # --- Exécution du script Python ---
 echo "=== Lancement AutoML ==="
-python app/5_migration.py
+python app/config/5_migration.py
 echo "=== Fin AutoML ==="

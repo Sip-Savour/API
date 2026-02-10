@@ -12,5 +12,5 @@
 
 # --- Exécution du script Python ---
 echo "=== Lancement AutoML ==="
-python app/2_1_train_recom.py
+python app/config/2_1_train_recom.py
 echo "=== Fin AutoML ==="

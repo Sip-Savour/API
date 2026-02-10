@@ -12,5 +12,5 @@
 
 # --- Exécution du script Python ---
 echo "=== Lancement AutoML ==="
-python app/4_1_audit_cepage.py
+python app/config/4_1_audit_cepage.py
 echo "=== Fin AutoML ==="

@@ -29,8 +29,6 @@ fi
 # =========================================================
 # 2. ACTIVATION ENVIRONNEMENT
 # =========================================================
-# On cherche le venv. 
-# Si votre venv est dans le dossier API (un cran au-dessus), on fait ../
 if [ -f "venv/bin/activate" ]; then
     source venv/bin/activate
     echo "✅ Venv activé (local)."
@@ -39,8 +37,6 @@ elif [ -f "../venv/bin/activate" ]; then
     echo "✅ Venv activé (parent)."
 else
     echo "⚠️ ATTENTION : Venv non trouvé automatiquement."
-    # Mettez ici le chemin absolu si les deux précédents échouent
-    # source /info/etu/m1/s2203089/API/python/venv/bin/activate
 fi
 
 # =========================================================

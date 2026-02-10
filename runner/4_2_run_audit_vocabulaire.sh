@@ -12,5 +12,5 @@
 
 # --- Exécution du script Python ---
 echo "=== Lancement AutoML ==="
-python app/4_2_audit_vocab.py
+python app/config/4_2_audit_vocab.py
 echo "=== Fin AutoML ==="
