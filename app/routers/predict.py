@@ -24,7 +24,7 @@ def predict_wine(req: WineRequest):
                 results.append(info)
 
         return WineResponse(
-            bottles=results 
+            bottle=results 
         )
     except Exception as e:
         print(f"Erreur API : {e}")
