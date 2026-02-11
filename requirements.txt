@@ -17,4 +17,4 @@ passlib[bcrypt]>=1.7.4  # Pour le hashage des mots de passe
 # --- Gestion des requêtes ---
 requests>=2.28.0
 
-./automl/  <-- Décommenter si automl est un package installable avec setup.py
+./automl/
