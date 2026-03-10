@@ -19,7 +19,7 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
     password_hash = Column(String)
-    date_naissance = Column(Date, nullable=True)
+    date_naissance = Column(Date, nullable=False)
     
     favorites = relationship("Favorite", back_populates="user")
 

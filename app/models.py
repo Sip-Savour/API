@@ -21,10 +21,10 @@ class UserCreate(BaseModel):
     username: str
     email: str
     password: str
-    date_naissance : Optional[date] = None
+    date_naissance : date
 
 class UserResponse(BaseModel):
     id: int
     username: str
     email: str
-    date_naissance : Optional[date] = None
+    date_naissance : date
