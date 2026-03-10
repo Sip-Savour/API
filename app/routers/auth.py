@@ -27,7 +27,8 @@ def create_user(user: UserCreate):
         new_user = User(
             username=user.username,
             email=user.email,
-            password_hash=get_password_hash(user.password)
+            password_hash=get_password_hash(user.password),
+            date_naissance=user.date_naissance
         )
         
         db.add(new_user)

@@ -1,3 +1,5 @@
+from sqlite3 import Date
+
 from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, Text
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
@@ -16,7 +18,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
-    password_hash = Column(String) 
+    password_hash = Column(String)
+    date_naissance = Column(Date, nullable=True)
     
     favorites = relationship("Favorite", back_populates="user")
 

@@ -1,3 +1,5 @@
+from datetime import date
+
 from pydantic import BaseModel
 from typing import List, Optional 
 
@@ -19,8 +21,10 @@ class UserCreate(BaseModel):
     username: str
     email: str
     password: str
+    date_naissance : Optional[date] = None
 
 class UserResponse(BaseModel):
     id: int
     username: str
     email: str
+    date_naissance : Optional[date] = None

@@ -16,7 +16,7 @@ app = FastAPI(
 # Initialisation DB
 @app.on_event("startup")
 def startup_event():
-    print("🚀 Démarrage de l'API...")
+    print(" Démarrage de l'API...")
     init_db()
 
 @app.get("/")
