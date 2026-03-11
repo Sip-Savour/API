@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from database import init_db
 import sys
 import os
-from routers import predict, auth
+from routers import auth
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -24,5 +24,5 @@ def home():
     return {"status": "online", "message": "API opérationnelle."}
 
 # --- ENREGISTREMENT DES ROUTERS ---
-app.include_router(predict.router)
+#app.include_router(predict.router)
 app.include_router(auth.router)
