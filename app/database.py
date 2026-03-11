@@ -1,6 +1,4 @@
-from sqlite3 import Date
-
-from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, Text
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, Text, Date
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
 # ================= CONFIGURATION =================
