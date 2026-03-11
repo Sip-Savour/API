@@ -28,3 +28,14 @@ class UserResponse(BaseModel):
     username: str
     email: str
     date_naissance : date
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+# --- TOKEN ---
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
