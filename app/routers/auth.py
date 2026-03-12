@@ -1,16 +1,20 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends, status
+from passlib.context import CryptContext
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 import sys
 import os
-from database import SessionLocal, User
-from models import UserCreate, UserResponse, UserLogin, Token
+from database import SessionLocal, User, Favorite, Wine, engine
+from models import UserCreate, UserResponse, UserLogin, Token, FavoriteCreate
 from datetime import date
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+##sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 router = APIRouter()
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 def get_password_hash(password):
     return pwd_context.hash(password)
@@ -19,6 +23,21 @@ def check_age(birth_date: date):
     today = date.today()
     age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
     return age >= 18
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token manquant ou invalide",
+        )
+    return token
 
 @router.post("/signup", response_model=UserResponse, tags=["Auth"])
 def create_user(user: UserCreate):
@@ -83,3 +102,45 @@ def get_all_users():
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
+
+
+@router.post("/favorites", tags=["User Profile"])
+def add_favorite(fav: FavoriteCreate, current_user_token: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    # 1. Retrouver l'ID de l'utilisateur à partir du token (pour l'instant exemple statique)
+    # Dans un vrai système JWT, on décoderait le token ici.
+    # Exemple statique ici :
+    user_id = 1 
+
+    # 2. Vérifier si le favori existe déjà
+    existing = db.query(Favorite).filter(
+        Favorite.user_id == user_id, 
+        Favorite.wine_id == fav.wine_id
+    ).first()
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Ce vin est déjà dans vos favoris.")
+
+    new_fav = Favorite(user_id=user_id, wine_id=fav.wine_id)
+    db.add(new_fav)
+    db.commit()
+    
+    return {"message": "Vin ajouté aux favoris avec succès !"}
+
+@router.get("/favorites", tags=["User Profile"])
+def list_favorites(current_user_token: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    user_id = 1 # Exemple. En vrai, tu extrairais l'ID de l'utilisateur du token JWT ici.
+    user_favs = db.query(Favorite).filter(Favorite.user_id == user_id).all()
+    
+    # On renvoie les détails des vins favoris
+    return [
+        {
+            "id": f.wine.id,
+            "title": f.wine.title,
+            "variety": f.wine.variety
+        } for f in user_favs
+    ]
+
+##To do : implémenter la logique de gestion des tokens d'authentification (JWT, OAuth2, etc.) pour sécuriser les endpoints et gérer les sessions utilisateur.
+## actuellement, le token est un simple placeholder pour démonstration.
+
+## To do 2 : vérifier/finaliser la logique de gestion des favoris (ajout/suppression de vins aux favoris d'un utilisateur) et créer les endpoints correspondants.

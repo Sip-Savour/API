@@ -39,3 +39,7 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
+# --- FAVORIS ---
+class FavoriteCreate(BaseModel):
+    user_id: int
+    wine_id: int
