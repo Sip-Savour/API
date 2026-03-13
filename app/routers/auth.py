@@ -7,14 +7,37 @@ import sys
 import os
 from database import SessionLocal, User, Favorite, Wine, engine
 from models import UserCreate, UserResponse, UserLogin, Token, FavoriteCreate
-from datetime import date
+from datetime import date, timedelta, datetime
+from typing import Optional
+from jose import jwt, JWTError
 
 ##sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 router = APIRouter()
+SECRET_KEY = "put-it-in-env-variable-in-prod"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
+def create_access_token(
+    data: dict,
+    expires_delta: Optional[timedelta] = None
+) -> str:
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def decode_access_token(token: str) -> dict:
+    try:
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token invalide ou expiré",
+        )
 
 def get_password_hash(password):
     return pwd_context.hash(password)
@@ -82,7 +105,12 @@ def login(user_data: UserLogin):
     if not user or not pwd_context.verify(user_data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Identifiants incorrects")
     
-    return {"access_token": f"fake-token-for-{user.id}", "token_type": "bearer"}
+    access_token = create_access_token(
+        data={"sub": user.username}
+    )
+    
+    
+    return {"access_token": access_token, "token_type": "bearer"}
 
 @router.get("/test-db", tags=["Test"])
 def get_all_users():
