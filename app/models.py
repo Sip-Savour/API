@@ -12,6 +12,8 @@ class BottleInfo(BaseModel):
     title: str
     description: str
     variety: str
+    color: str 
+
 
 class WineResponse(BaseModel):
     bottle: List[BottleInfo] | None

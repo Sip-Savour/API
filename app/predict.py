@@ -1,145 +1,109 @@
-import time
-import os
-import sys
-import pandas as pd
-import numpy as np
-import json
 import joblib
+import pandas as pd
+import json
+import time
+from pathlib import Path
+from automl import predict as automl_predict
+# =============================================================================
+# 1. CONFIGURATION DES CHEMINS
+# =============================================================================
+BASE_DIR = Path(__file__).resolve().parent.parent
+GENERATED_DIR = BASE_DIR / "generated_files" / "pkl"
+DATA_DIR = BASE_DIR / "data"
 
-# On remonte d'un niveau pour trouver le package automl
-sys.path.append("..")
+MODEL_KNN     = GENERATED_DIR / "model_knn.pkl"
+VECT_KNN      = GENERATED_DIR / "vectorizer_knn.pkl"
+METADATA      = GENERATED_DIR / "wines_metadata.pkl"
+COLORS_FILE   = DATA_DIR / "wine_colors.json"
 
+# =============================================================================
+# 2. CHARGEMENT GLOBAL AU DÉMARRAGE
+# =============================================================================
 try:
-    import automl
-    print("Package 'automl' importé.")
-except ImportError:
-    print("ERREUR : Package 'automl' introuvable.")
-
-# ================= CONFIGURATION =================
-BASE_DIR = "../" 
-GENERATED_DIR = BASE_DIR + "generated_files/pkl/"
-DATA_DIR      = BASE_DIR + "data/"
-
-MODEL_KNN     = GENERATED_DIR + "model_knn.pkl"
-VECT_KNN      = GENERATED_DIR + "vectorizer_knn.pkl"
-METADATA      = GENERATED_DIR + "wines_metadata.pkl"
-GROUPS_FILE   = GENERATED_DIR + "keyword_groups.pkl"
-COLUMNS_FILE  = GENERATED_DIR + "keywords_list.pkl"
-COLORS_FILE   = DATA_DIR      + "wine_colors.json"
-
-# Chargement unique au démarrage (Global)
-knn_model = None
-knn_vect = None
-df_meta = None
-KEYWORD_GROUPS = {}
-ORDERED_COLUMNS = []
-variety_map = {}
-
-try:
-    if os.path.exists(MODEL_KNN):
-        knn_model = joblib.load(MODEL_KNN)
-        knn_vect  = joblib.load(VECT_KNN)
+    print("⏳ Initialisation du moteur KNN (Multi-recommandations)...")
+    knn_model = joblib.load(MODEL_KNN)
+    knn_vect  = joblib.load(VECT_KNN)
     
-    if os.path.exists(METADATA):
+    if METADATA.exists():
         df_meta = pd.read_pickle(METADATA)
     else:
-        df_meta = pd.read_csv(DATA_DIR + "wines_db_full.csv", on_bad_lines='skip', low_memory=False)
-
-    if os.path.exists(GROUPS_FILE):
-        KEYWORD_GROUPS = joblib.load(GROUPS_FILE)
-        ORDERED_COLUMNS = joblib.load(COLUMNS_FILE)
-
-    if os.path.exists(COLORS_FILE):
-        with open(COLORS_FILE, "r", encoding="utf-8") as f:
-            variety_map = json.load(f)
-
-    print("Moteur de prédiction chargé.")
-
+        df_meta = pd.read_csv(DATA_DIR / "wines_db_full.csv", low_memory=False)
+        
+    with open(COLORS_FILE, "r", encoding="utf-8") as f:
+        variety_map = json.load(f)
+        
+    SYSTEM_READY = True
+    print(f"✅ Système prêt : {len(df_meta)} vins chargés en RAM.")
 except Exception as e:
-    print(f"Erreur chargement ressources : {e}")
+    print(f"❌ Erreur au chargement du moteur : {e}")
+    SYSTEM_READY = False
 
+# =============================================================================
+# 3. FONCTION DE PRÉDICTION (SUPPORT TOP_N)
+# =============================================================================
+def fast_predict(data_path: str, color_constraint: str = None, top_n: int = 5):
+    """
+    Recherche les 'top_n' vins qui matchent le mieux la description (saveurs),
+    tout en respectant STRICTEMENT la couleur demandée.
+    """
+    if not SYSTEM_READY:
+        return {"error": "Modèle non chargé sur le serveur"}
 
-# ================= OUTILS =================
-def text_to_dataframe(user_text):
-    vector = np.zeros((1, len(ORDERED_COLUMNS)), dtype=int)
-    if user_text:
-        user_text = user_text.lower()
-        for i, col_name in enumerate(ORDERED_COLUMNS):
-            synonyms = KEYWORD_GROUPS.get(col_name, [])
-            for word in synonyms:
-                if word in user_text:
-                    vector[0, i] = 1
-                    break 
-    return pd.DataFrame(vector, columns=ORDERED_COLUMNS)
-
-# ================= PRÉDICTION =================
-def fast_predict(description, color_constraint=None, top_n=5):
-    start = time.time()
+    description = data_path
     
-    # --- 1. AUTOML ---
-    cepage_decision = "Inconnu"
-    base_filename = "temp_query"      
-    real_filename = "temp_query.data" 
-    
-    try:
-        input_data = text_to_dataframe(description)
-        input_data.to_csv(real_filename, index=False, header=False, sep=" ")
-        
-        prediction = automl.predict(base_filename)
-        
-        if isinstance(prediction, (list, np.ndarray)):
-            cepage_decision = prediction[0] if len(prediction) > 0 else "Inconnu"
-        else:
-            cepage_decision = prediction
-            
-    except Exception as e:
-        print(f"Erreur AutoML: {e}")
-        cepage_decision = "Erreur"
-    finally:
-        if os.path.exists(real_filename):
-            try: os.remove(real_filename)
-            except: pass
-
-    # --- 2. KNN (Récupération de 5 bouteilles) ---
-    best_bottles = [] 
-    seen_titles = set() 
-    
-    if knn_model:
+    # Sécurité pour éviter l'Erreur 500
+    def safe_float(val):
         try:
-            vec_knn = knn_vect.transform([description])
-            distances, indices = knn_model.kneighbors(vec_knn, n_neighbors=100)
+            return float(val) if pd.notna(val) else 0.0
+        except:
+            return 0.0
+
+    try:
+        # 1. On appelle le module automl
+        # (Assurez-vous que l'import en haut de fichier est `from automl import predictor`)
+        distances, indices = automl_predict(description, color_constraint, top_n)
+        
+        # 2. Sécurité : si le modèle renvoie vide
+        if len(indices) == 0:
+            return {"error": "Échec de la prédiction KNN."}
+
+        recommendations = []
+        
+        # 3. Parcours des résultats du plus proche au plus éloigné
+        for i in indices[0]:
+            if len(recommendations) >= top_n:
+                break # On a trouvé nos 5 pépites
+                
+            candidat = df_meta.iloc[i]
+            variete = candidat.get('variety', 'unknown')
+            couleur_vin = variety_map.get(variete, "unknown")
             
-            if cepage_decision not in ["Inconnu", "Erreur"]:
-                for i in indices[0]:
-                    if len(best_bottles) >= top_n: break
-                    
-                    candidat = df_meta.iloc[i]
-                    if candidat['title'] in seen_titles: continue
-                    
-                    col = variety_map.get(candidat['variety'], "unknown")
-                    if color_constraint and col != "unknown" and col != color_constraint:
-                        continue
-                    if candidat['variety'] != cepage_decision:
-                        continue
-                    
-                    best_bottles.append(candidat)
-                    seen_titles.add(candidat['title'])
+            # FILTRE DE COULEUR ABSOLU
+            if color_constraint and color_constraint != "null" and color_constraint != "":
+                if couleur_vin != color_constraint:
+                    continue # Mauvaise couleur, on ignore
             
-            if len(best_bottles) < top_n:
-                for i in indices[0]:
-                    if len(best_bottles) >= top_n: break
+            # On ajoute le vin (uniquement les 4 champs utiles)
+            recommendations.append({
+                "title": str(candidat.get("title", "Nom inconnu")),
+                "description": str(candidat.get("description", "")),
+                "variety": str(candidat.get("variety", "unknown")),
+                "color": str(variety_map.get(candidat.get('variety', ''), "unknown"))
+            })
+            
+        # 4. LE FALLBACK (Corrigé et bien indenté)
+        # Si la liste est vide mais qu'on a des indices, on renvoie les meilleurs vins trouvés
+        if not recommendations and len(indices[0]) > 0:
+            for i in indices[0][:top_n]:
+                candidat = df_meta.iloc[i]
+                recommendations.append({
+                    "title": str(candidat.get("title", "Nom inconnu")),
+                    "description": str(candidat.get("description", "")),
+                    "variety": str(candidat.get("variety", "unknown")),
+                    "color": str(variety_map.get(candidat.get('variety', ''), "unknown"))
+                })
 
-                    candidat = df_meta.iloc[i]
-                    if candidat['title'] in seen_titles: continue
+        return recommendations
 
-                    col = variety_map.get(candidat['variety'], "unknown")
-                    if color_constraint and col != "unknown" and col != color_constraint:
-                        continue
-                    
-                    best_bottles.append(candidat)
-                    seen_titles.add(candidat['title'])
-
-        except Exception as e:
-            print(f"Erreur KNN: {e}")
-
-    return best_bottles
+    except Exception as e:
+        return {"error": f"Erreur critique de l'IA : {str(e)}"}
