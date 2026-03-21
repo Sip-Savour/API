@@ -37,9 +37,11 @@ class UserLogin(BaseModel):
 
 # --- TOKEN ---
 
-class Token(BaseModel):
-    access_token: str
-    token_type: str
+class AuthResponse(BaseModel):
+    token: str
+    userId: int
+    username: str
+    email: str
 
 # --- FAVORIS ---
 class FavoriteCreate(BaseModel):
