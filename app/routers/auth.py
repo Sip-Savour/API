@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 import sys
 import os
 from database import SessionLocal, User, Favorite, Wine, engine
-from models import UserCreate, UserResponse, UserLogin, Token, FavoriteCreate
+from models import UserCreate, UserResponse, UserLogin, AuthResponse, FavoriteCreate
 from datetime import date, timedelta, datetime
 from typing import Optional
 from jose import jwt, JWTError
@@ -96,7 +96,7 @@ def create_user(user: UserCreate):
     finally:
         db.close()
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=AuthResponse, tags=["Auth"])
 def login(user_data: UserLogin):
     db = SessionLocal()
     user = db.query(User).filter(User.email == user_data.email).first()
@@ -110,7 +110,12 @@ def login(user_data: UserLogin):
     )
     
     
-    return {"access_token": access_token, "token_type": "bearer"}
+    return AuthResponse(
+        token=access_token,
+        userId=user.id,
+        username=user.username,
+        email=user.email
+    )
 
 @router.get("/test-db", tags=["Test"])
 def get_all_users():
