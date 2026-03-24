@@ -1,3 +1,7 @@
 best_model.pkl
 best_model.tar.gz
 *.log
+*.log.txt
+*.pyc
+API.tar
+app.tar

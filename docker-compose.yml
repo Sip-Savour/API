@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  sommelier:
+    # 1. Image et Build
+    image: sommelier-api:latest
+    container_name: sommelier-api
+    
+    # 2. Réseau
+    ports:
+      - "${HOST_PORT:-63011}:8000"
+      
+    # 3. Volumes (Attention ici !)
+    # J'ai retiré le volume sur /app/data pour ne pas écraser tes CSV et JSON qui sont dans l'image.
+    # Pour persister la base de données SQLite (utilisateurs), on monte juste le fichier db.
+    volumes:
+      - sommelier_db:/app/sommelier.db
+      
+    # 4. Environnement
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    
+    restart: unless-stopped
+
+    # 5. Ressources (Ajustées pour l'IA)
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '6'      # Augmenté à 2 car le KNN et Pandas ont besoin de calcul
+          memory: 16G     
+
+    # 6. Healthcheck (Sans besoin de fichier supplémentaire)
+    healthcheck:
+      # Utilise le module natif de Python pour pinger la route "/" au lieu de curl (qui n'est pas dans l'image slim)
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+volumes:
+  sommelier_db:
+    driver: local

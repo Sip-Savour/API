@@ -1,16 +1,48 @@
 #!/bin/bash
-#SBATCH --job-name=5_api         # Nom du job
-#SBATCH --output=automl_output.log    # Fichier de sortie standard
-#SBATCH --error=automl_error.log      # Fichier d'erreur
-#SBATCH --time=48:00:00               # Temps max d'exécution (hh:mm:ss)
-#SBATCH --ntasks=1                    # Nombre de tâches (1 pour python)
-#SBATCH --cpus-per-task=16             # Nombre de threads / CPU à utiliser
-#SBATCH --mem=128G                     # Mémoire allouée
-#SBATCH --mail-type=END,FAIL               # Quand envoyer un mail (END, FAIL, ALL)
-#SBATCH --mail-user=Aymeric.Mabire.Etu@univ-lemans.fr  # Ton adresse mail
-# --- Charger l'environnement Python ---
+#SBATCH --job-name=5_api
+#SBATCH --output=logs/api_output.log
+#SBATCH --error=logs/api_error.log
+#SBATCH --time=48:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=128G
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-user=Aymeric.Mabire.Etu@univ-lemans.fr
 
-# --- Exécution du script Python ---
-echo "=== Lancement AutoML ==="
-uvicorn api:app --reload
-echo "=== Fin AutoML ==="
+# =========================================================
+# 1. NAVIGATION VERS LE CODE (Chemin Absolu)
+# =========================================================
+# On force le script à aller là où est api.py
+cd /info/etu/m1/s2203089/API/app
+
+echo "📍 Dossier de travail actuel : $(pwd)"
+
+# Petite vérification pour le log
+if [ -f "api.py" ]; then
+    echo "✅ Fichier api.py trouvé."
+else
+    echo "❌ ERREUR : api.py est introuvable ici !"
+    ls -la
+    exit 1
+fi
+
+# =========================================================
+# 2. ACTIVATION ENVIRONNEMENT
+# =========================================================
+if [ -f "venv/bin/activate" ]; then
+    source venv/bin/activate
+    echo "✅ Venv activé (local)."
+elif [ -f "../venv/bin/activate" ]; then
+    source ../venv/bin/activate
+    echo "✅ Venv activé (parent)."
+else
+    echo "⚠️ ATTENTION : Venv non trouvé automatiquement."
+fi
+
+# =========================================================
+# 3. LANCEMENT API
+# =========================================================
+echo "🚀 Lancement Uvicorn sur le noeud $(hostname)..."
+
+# Lancement bloquant (pas de nohup, pas de &)
+uvicorn api:app --host 0.0.0.0 --port 8000

@@ -1,112 +1,11 @@
 .
 ├── automl
-│   ├── automl
-│   │   ├── automl.egg-info
-│   │   │   ├── dependency_links.txt
-│   │   │   ├── entry_points.txt
-│   │   │   ├── PKG-INFO
-│   │   │   ├── requires.txt
-│   │   │   ├── SOURCES.txt
-│   │   │   └── top_level.txt
-│   │   ├── classification
-│   │   │   ├── _base.py
-│   │   │   ├── explo.py
-│   │   │   ├── __init__.py
-│   │   │   ├── __pycache__
-│   │   │   │   ├── _base.cpython-313.pyc
-│   │   │   │   ├── explo.cpython-313.pyc
-│   │   │   │   ├── __init__.cpython-313.pyc
-│   │   │   │   └── stable.cpython-313.pyc
-│   │   │   └── stable.py
-│   │   ├── _config.py
-│   │   ├── core
-│   │   │   ├── evaluator.py
-│   │   │   ├── __init__.py
-│   │   │   ├── predictor.py
-│   │   │   ├── __pycache__
-│   │   │   │   ├── evaluator.cpython-313.pyc
-│   │   │   │   ├── __init__.cpython-313.pyc
-│   │   │   │   ├── __init__.cpython-39.pyc
-│   │   │   │   ├── predictor.cpython-313.pyc
-│   │   │   │   ├── runner.cpython-313.pyc
-│   │   │   │   ├── trainer.cpython-313.pyc
-│   │   │   │   └── trainer.cpython-39.pyc
-│   │   │   ├── runner.py
-│   │   │   └── trainer.py
-│   │   ├── __init__.py
-│   │   ├── __pycache__
-│   │   │   ├── _config.cpython-313.pyc
-│   │   │   ├── _config.cpython-39.pyc
-│   │   │   ├── __init__.cpython-313.pyc
-│   │   │   └── __init__.cpython-39.pyc
-│   │   ├── regression
-│   │   │   ├── _base.py
-│   │   │   ├── explo.py
-│   │   │   ├── __init__.py
-│   │   │   ├── __pycache__
-│   │   │   │   ├── _base.cpython-313.pyc
-│   │   │   │   ├── explo.cpython-313.pyc
-│   │   │   │   ├── __init__.cpython-313.pyc
-│   │   │   │   └── stable.cpython-313.pyc
-│   │   │   ├── stable.py
-│   │   │   └── stable.py.save
-│   │   └── utils
-│   │       ├── cleaning.py
-│   │       ├── detection.py
-│   │       ├── __init__.py
-│   │       ├── io.py
-│   │       ├── logging.py
-│   │       ├── optuna.py
-│   │       └── __pycache__
-│   │           ├── cleaning.cpython-313.pyc
-│   │           ├── cleaning.cpython-39.pyc
-│   │           ├── detection.cpython-313.pyc
-│   │           ├── detection.cpython-39.pyc
-│   │           ├── __init__.cpython-313.pyc
-│   │           ├── __init__.cpython-39.pyc
-│   │           ├── io.cpython-313.pyc
-│   │           ├── io.cpython-39.pyc
-│   │           ├── logging.cpython-313.pyc
-│   │           ├── logging.cpython-39.pyc
-│   │           ├── optuna.cpython-313.pyc
-│   │           └── optuna.cpython-39.pyc
-│   ├── automl.egg-info
-│   │   ├── dependency_links.txt
-│   │   ├── entry_points.txt
-│   │   ├── PKG-INFO
-│   │   ├── requires.txt
-│   │   ├── SOURCES.txt
-│   │   └── top_level.txt
-│   ├── catboost_info
-│   │   ├── catboost_training.json
-│   │   ├── learn
-│   │   │   └── events.out.tfevents
-│   │   ├── learn_error.tsv
-│   │   ├── test
-│   │   │   └── events.out.tfevents
-│   │   ├── test_error.tsv
-│   │   └── time_left.tsv
-│   ├── checkpoints
-│   │   └── best_model_multi-classification_stable.pkl
-│   ├── logs
-│   │   ├── automl_stable_log.txt
-│   │   ├── checkpoint_log.txt
-│   │   ├── classification_stable_log.txt
-│   │   ├── clean_log.txt
-│   │   ├── detection_log.txt
-│   │   └── runner_stable_log.txt
-│   ├── pyproject.toml
-│   ├── README.md
-│   ├── requirements.txt
-│   └── results
-│       ├── best_model.tar.gz
-│       └── results_stable.pkl
-├── best_model.tar.gz
 ├── data
 │   ├── archive.zip
 │   ├── audit_cepages.csv
 │   ├── audit_vocabulary.csv
 │   ├── data_train.csv
+│   ├── sommelier.db
 │   ├── wine_colors.json
 │   ├── winemag-data-130k-v2.csv
 │   ├── winemag-data-130k-v2.json
@@ -114,37 +13,21 @@
 │   └── wines_db_full.csv
 ├── generated_files
 │   ├── automl
-│   │   ├── wine_train.data
-│   │   └── wine_train.solution
 │   └── pkl
-│       ├── keyword_groups.pkl
-│       ├── keywords_list.pkl
-│       ├── model_knn.pkl
-│       ├── vectorizer_knn.pkl
-│       └── wines_metadata.pkl
 ├── python
 │   ├── 1_prepare.py
 │   ├── 2_1_train_recom.py
 │   ├── 2_2_train.py
 │   ├── 3_1_test_fast.py
-│   ├── 3_2_test_slow.py
 │   ├── 4_1_audit_cepage.py
 │   ├── 4_2_audit_vocab.py
-│   ├── 5_fast.py.save
-│   └── api.py
+│   ├── 5_migration.py
+│   ├── api.py
+│   ├── database.py
+│   └── __pycache__
 ├── README.md
 ├── requirements.txt
 ├── runner
-│   ├── 1_run_prepare.sh
-│   ├── 2_1_run_train_recommande.sh
-│   ├── 2_run_train.sh
-│   ├── 3_1_run_test_fast.sh
-│   ├── 3_2_run_test_slow.sh
-│   ├── 4_1_run_audit_cepage.sh
-│   ├── 4_2_run_audit_vocabulaire.sh
-│   └── 5_api.sh
-├── tests
-│   └── test_smoke.py
-└── tree.txt
+└── tests
 
-26 directories, 121 files
+
