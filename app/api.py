@@ -2,18 +2,18 @@ from fastapi import FastAPI
 from database import init_db
 import sys
 import os
-from routers import auth,predict
+
+# --- CORRECTION ICI : On ajoute 'wines' à l'importation ---
+from routers import auth, predict, wines
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-
 app = FastAPI(
-    title="Sommelier IA API", 
+    title="Sommelier IA API",
     description="API de recommandation de vin (AutoML + KNN) & Gestion Utilisateurs",
     version="1.0"
 )
 
-# Initialisation DB
 @app.on_event("startup")
 def startup_event():
     print(" Démarrage de l'API...")
@@ -26,3 +26,4 @@ def home():
 # --- ENREGISTREMENT DES ROUTERS ---
 app.include_router(predict.router)
 app.include_router(auth.router)
+app.include_router(wines.router)

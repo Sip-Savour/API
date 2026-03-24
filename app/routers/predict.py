@@ -7,6 +7,7 @@ from predict import fast_predict
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 router = APIRouter()
 
+
 @router.post("/predict", response_model=WineResponse, tags=["AI"])
 def predict_wine(req: WineRequest):
     try:
@@ -14,7 +15,7 @@ def predict_wine(req: WineRequest):
         bouteilles_trouvees = fast_predict(req.features, req.color)
 
         # ==========================================================
-        # 1. LA CORRECTION EST ICI : VÉRIFICATION DE L'ERREUR IA
+        # 1. VÉRIFICATION DE L'ERREUR IA
         # ==========================================================
         # Si le retour est un dictionnaire contenant la clé "error"
         if isinstance(bouteilles_trouvees, dict) and "error" in bouteilles_trouvees:
@@ -23,9 +24,10 @@ def predict_wine(req: WineRequest):
 
         # 2. TRAITEMENT NORMAL (Si c'est bien une liste de bouteilles)
         results = []
-        if bouteilles_trouvees and isinstance(bouteilles_trouvees, list):
+        if isinstance(bouteilles_trouvees, list):
             for b in bouteilles_trouvees:
                 info = BottleInfo(
+                    id=int(b.get('id', 0)),  # <--- L'ID EST AJOUTÉ ICI !
                     title=str(b.get('title', 'Inconnu')),
                     description=str(b.get('description', '')),
                     variety=str(b.get('variety', 'Inconnu')),
@@ -34,14 +36,14 @@ def predict_wine(req: WineRequest):
                 results.append(info)
 
         return WineResponse(
-            bottle=results 
+            bottle=results
         )
-        
+
     except ValueError as ve:
         # Erreur "métier" (ex: Aucun vin trouvé) -> On renvoie une erreur 400 (Bad Request / Not Found)
         print(f"Information IA : {ve}")
         raise HTTPException(status_code=400, detail=str(ve))
-        
+
     except Exception as e:
         # Vraie erreur de serveur (Crash) -> On renvoie 500
         print(f"Erreur Serveur API : {e}")

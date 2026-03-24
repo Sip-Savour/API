@@ -9,6 +9,7 @@ class WineRequest(BaseModel):
     color: str = None
 
 class BottleInfo(BaseModel):
+    id: int
     title: str
     description: str
     variety: str

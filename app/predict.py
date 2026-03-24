@@ -4,6 +4,7 @@ import json
 import time
 from pathlib import Path
 from automl import predict as automl_predict
+
 # =============================================================================
 # 1. CONFIGURATION DES CHEMINS
 # =============================================================================
@@ -39,7 +40,7 @@ except Exception as e:
     SYSTEM_READY = False
 
 # =============================================================================
-# 3. FONCTION DE PRÉDICTION (SUPPORT TOP_N)
+# 3. FONCTION DE PRÉDICTION (SUPPORT TOP_N & ID SQL)
 # =============================================================================
 def fast_predict(data_path: str, color_constraint: str = None, top_n: int = 5):
     """
@@ -60,7 +61,6 @@ def fast_predict(data_path: str, color_constraint: str = None, top_n: int = 5):
 
     try:
         # 1. On appelle le module automl
-        # (Assurez-vous que l'import en haut de fichier est `from automl import predictor`)
         distances, indices = automl_predict(description, color_constraint, top_n)
         
         # 2. Sécurité : si le modèle renvoie vide
@@ -83,20 +83,29 @@ def fast_predict(data_path: str, color_constraint: str = None, top_n: int = 5):
                 if couleur_vin != color_constraint:
                     continue # Mauvaise couleur, on ignore
             
-            # On ajoute le vin (uniquement les 4 champs utiles)
+            # CALCUL DE L'ID SQL 
+            # (L'index pandas commence à 0, la BDD auto-incrémentée commence à 1)
+            wine_id = int(candidat.name) + 1
+            
+            # On ajoute le vin avec son ID
             recommendations.append({
+                "id": wine_id,
                 "title": str(candidat.get("title", "Nom inconnu")),
                 "description": str(candidat.get("description", "")),
-                "variety": str(candidat.get("variety", "unknown")),
-                "color": str(variety_map.get(candidat.get('variety', ''), "unknown"))
+                "variety": str(variete),
+                "color": str(couleur_vin)
             })
             
-        # 4. LE FALLBACK (Corrigé et bien indenté)
-        # Si la liste est vide mais qu'on a des indices, on renvoie les meilleurs vins trouvés
+        # 4. LE FALLBACK
+        # Si la liste est vide (à cause du filtre de couleur par exemple) mais qu'on a des indices, 
+        # on renvoie les meilleurs vins trouvés peu importe la couleur
         if not recommendations and len(indices[0]) > 0:
             for i in indices[0][:top_n]:
                 candidat = df_meta.iloc[i]
+                wine_id = int(candidat.name) + 1
+                
                 recommendations.append({
+                    "id": wine_id,
                     "title": str(candidat.get("title", "Nom inconnu")),
                     "description": str(candidat.get("description", "")),
                     "variety": str(candidat.get("variety", "unknown")),

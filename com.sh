@@ -17,7 +17,6 @@ REQUIRED_FILES=(
     "Dockerfile"
     "docker-compose.yml"
     "requirements.txt"
-    "sommelier.db"
 )
 
 echo "Validation de la présence des fichiers requis..."
