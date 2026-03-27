@@ -16,7 +16,7 @@ MODEL_KNN     = GENERATED_DIR / "model_knn.pkl"
 VECT_KNN      = GENERATED_DIR / "vectorizer_knn.pkl"
 METADATA      = GENERATED_DIR / "wines_metadata.pkl"
 COLORS_FILE   = DATA_DIR / "wine_colors.json"
-
+variety_map = {}
 # =============================================================================
 # 2. CHARGEMENT GLOBAL AU DÉMARRAGE
 # =============================================================================
