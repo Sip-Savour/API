@@ -66,28 +66,6 @@ def get_random_wines(db: Session = Depends(get_db)):
 # ==========================================================
 # LA ROUTE : GET /vins/{wine_id}
 # ==========================================================
-@router.get("/wines/{wine_id}", response_model=BottleInfo, tags=["Vins"])
-def get_vin_by_id(wine_id: int, db: Session = Depends(get_db)):
-    # 1. On interroge la base de données
-    vin = db.query(Wine).filter(Wine.id == wine_id).first()
-
-    # 2. Si le vin n'existe pas, on renvoie une erreur 404
-    if not vin:
-        raise HTTPException(status_code=404, detail=f"Aucun vin trouvé avec l'ID {wine_id}")
-
-    # 3. On déduit la couleur grâce au cépage
-    couleur_vin = variety_map.get(vin.variety, "Inconnue")
-
-    # 4. On renvoie l'objet formaté
-    return BottleInfo(
-        id=vin.id,
-        title=vin.title,
-        description=vin.description or "",
-        variety=vin.variety or "Inconnu",
-        color=couleur_vin
-    )
-
-
 @router.get("/wines/weekly", tags=["Recommendations"])
 def get_weekly_recommendation(
         color: Optional[str] = Query(None, description="Couleur préférée (Red, White, Rose)"),
@@ -129,5 +107,29 @@ def get_weekly_recommendation(
         "variety": recommended_wine.variety,
         "color": recommended_wine.color
     }
+
+@router.get("/wines/{wine_id}", response_model=BottleInfo, tags=["Vins"])
+def get_vin_by_id(wine_id: int, db: Session = Depends(get_db)):
+    # 1. On interroge la base de données
+    vin = db.query(Wine).filter(Wine.id == wine_id).first()
+
+    # 2. Si le vin n'existe pas, on renvoie une erreur 404
+    if not vin:
+        raise HTTPException(status_code=404, detail=f"Aucun vin trouvé avec l'ID {wine_id}")
+
+    # 3. On déduit la couleur grâce au cépage
+    couleur_vin = variety_map.get(vin.variety, "Inconnue")
+
+    # 4. On renvoie l'objet formaté
+    return BottleInfo(
+        id=vin.id,
+        title=vin.title,
+        description=vin.description or "",
+        variety=vin.variety or "Inconnu",
+        color=couleur_vin
+    )
+
+
+
 
 
