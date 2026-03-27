@@ -1,9 +1,8 @@
 name: "Sip&Savour API CI"
 
 on:
-  # La section "push" a été supprimée
   pull_request:
-    branches: ['**'] # Se déclenche sur une PR vers n'importe quelle branche
+    branches: [ "**" ] # Syntaxe standard pour toutes les branches
 
 jobs:
   build-and-test:
@@ -23,6 +22,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
+          # On s'assure d'installer les outils de sécurité que nous avons ajoutés
+          pip install bcrypt argon2-cffi 
 
       - name: Run Tests
-        run: pytest
+        # CRUCIAL : On utilise 'python -m pytest' pour charger le conftest.py
+        # et on précise le dossier 'tests/' pour ignorer les fichiers .txt parasites
+        run: |
+          python -m pytest tests/ -v
